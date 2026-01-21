@@ -1,195 +1,266 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Cytoscape Graph with metadata
-    const cy = cytoscape({
-        container: document.getElementById('cy'),
-        elements: [
-            // Nodes with features
-            { data: { id: 's1', name: 'Safehouse Alpha', type: 'hideout', risk: 0.1, hidden: 0.9 }, position: { x: 100, y: 150 } },
-            { data: { id: 's2', name: 'Safehouse Beta', type: 'hideout', risk: 0.1, hidden: 0.8 }, position: { x: 500, y: 350 } },
-            { data: { id: 'b1', name: 'Central Bank', type: 'bank', risk: 0.4, hidden: 0.2 }, position: { x: 300, y: 250 } },
-            { data: { id: 'p1', name: 'District 4 Police', type: 'police', risk: 0.9, hidden: 0.05 }, position: { x: 500, y: 150 } },
-            { data: { id: 'bs1', name: 'Blind Spot 09', type: 'blindspot', risk: 0.05, hidden: 0.95 }, position: { x: 100, y: 350 } },
+// ============================================================================
+// THE GHOST - Core Script
+// ============================================================================
+// Este script visualiza un grafo 3D donde un agente (ladrón) se mueve entre
+// ubicaciones de la ciudad, evitando patrullas policiales. Usa el algoritmo
+// de Dijkstra para calcular rutas de escape seguras hacia un hideout único.
+// ============================================================================
 
-            // Edges with distancia and base_riesgo
-            { data: { id: 'e1', source: 's1', target: 'b1', dist: 10, riesgo: 0.2, alpha: 0.7 } },
-            { data: { id: 'e2', source: 'b1', target: 's2', dist: 15, riesgo: 0.5, alpha: 0.4 } },
-            { data: { id: 'e3', source: 'b1', target: 'p1', dist: 5, riesgo: 0.9, alpha: 0.1 } },
-            { data: { id: 'e4', source: 's2', target: 'bs1', dist: 8, riesgo: 0.1, alpha: 0.9 } },
-            { data: { id: 'e5', source: 'bs1', target: 's1', dist: 12, riesgo: 0.05, alpha: 0.95 } }
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ========================================================================
+    // 1. DATOS DEL GRAFO 3D
+    // ========================================================================
+    // Define todos los nodos (ubicaciones) y enlaces (conexiones) del mapa
+
+    const graphData = {
+        nodes: [
+            // Hideout único - El destino seguro del protocolo de pánico
+            { id: 's1', name: 'Safe Hideout', type: 'hideout', x: -200, y: 50, z: -100 },
+
+            // Otras zonas seguras (no son hideouts)
+            { id: 's2', name: 'Safehouse Beta', type: 'blindspot', x: 250, y: -80, z: 200 },
+            { id: 's3', name: 'Safehouse Gamma', type: 'blindspot', x: -150, y: 100, z: 250 },
+            { id: 's4', name: 'Safehouse Delta', type: 'junction', x: 300, y: -50, z: -150 },
+
+            // Bancos - Objetivos de alto valor pero con más vigilancia
+            { id: 'b1', name: 'Central Bank', type: 'bank', x: 0, y: 0, z: 0 },
+            { id: 'b2', name: 'ATM District 7', type: 'bank', x: 150, y: 30, z: -80 },
+
+            // Zonas policiales - Áreas de máximo riesgo
+            { id: 'p1', name: 'District 4 Police', type: 'police', x: 200, y: -100, z: -200 },
+            { id: 'p2', name: 'Metro Station Guard', type: 'police', x: -100, y: 80, z: 100 },
+            { id: 'p3', name: 'Checkpoint 6', type: 'police', x: -250, y: 0, z: -50 },
+
+            // Puntos ciegos - Zonas con poca vigilancia
+            { id: 'bs1', name: 'Blind Spot 09', type: 'blindspot', x: -180, y: 50, z: 80 },
+            { id: 'bs2', name: 'Blind Spot 12', type: 'blindspot', x: 180, y: 120, z: 220 },
+            { id: 'bs3', name: 'Alley Network', type: 'blindspot', x: 280, y: -30, z: 120 },
+
+            // Junctions - Zonas públicas de tránsito
+            { id: 'junc1', name: 'Plaza Central', type: 'junction', x: 50, y: -20, z: -120 },
+            { id: 'junc2', name: 'Market Square', type: 'junction', x: -120, y: 30, z: -30 },
+            { id: 'junc3', name: 'East End', type: 'junction', x: 230, y: 0, z: 50 }
         ],
-        style: [
-            {
-                selector: 'node',
-                style: {
-                    'label': 'data(name)',
-                    'color': '#fff',
-                    'font-size': '10px',
-                    'text-valign': 'bottom',
-                    'text-margin-y': '5px',
-                    'background-color': '#00f2ff',
-                    'width': '20px',
-                    'height': '20px',
-                    'border-width': '2px',
-                    'border-color': '#00f2ff',
-                    'overlay-padding': '4px'
-                }
-            },
-            {
-                selector: 'node[type="hideout"]',
-                style: { 'background-color': '#00ff95', 'border-color': '#00ff95' }
-            },
-            {
-                selector: 'node[type="bank"]',
-                style: { 'background-color': '#ffd700', 'border-color': '#ffd700', 'shape': 'diamond' }
-            },
-            {
-                selector: 'node[type="police"]',
-                style: { 'background-color': '#ff3e3e', 'border-color': '#ff3e3e', 'shape': 'triangle' }
-            },
-            {
-                selector: 'node[type="blindspot"]',
-                style: { 'background-color': '#bb00ff', 'border-color': '#bb00ff', 'shape': 'octagon' }
-            },
-            {
-                selector: 'edge',
-                style: {
-                    'width': 'mapData(alpha, 0, 1, 0.5, 4)', // Visualizing GAT Alpha
-                    'line-color': 'rgba(0, 242, 255, 0.3)',
-                    'curve-style': 'bezier',
-                    'target-arrow-shape': 'triangle',
-                    'target-arrow-color': 'rgba(0, 242, 255, 0.3)',
-                    'label': (ele) => `R: ${ele.data('riesgo')}`,
-                    'font-size': '10px',
-                    'font-weight': 'bold',
-                    'color': '#00f2ff',
-                    'text-rotation': 'autorotate',
-                    'text-background-color': '#0a0e14',
-                    'text-background-opacity': 1,
-                    'text-background-padding': '4px',
-                    'text-margin-y': '-2px'
-                }
-            },
-            {
-                selector: 'edge.active-route',
-                style: {
-                    'width': '4px',
-                    'line-color': '#00ff95',
-                    'target-arrow-color': '#00ff95',
-                    'line-style': 'dashed',
-                    'label': (ele) => `α: ${ele.data('alpha')}`
-                }
-            },
-            {
-                selector: 'node.scanning',
-                style: {
-                    'border-width': '6px',
-                    'border-color': '#00f2ff',
-                    'border-opacity': 0.5
-                }
-            }
-        ],
-        layout: { name: 'preset' },
-        userZoomingEnabled: true,
-        userPanningEnabled: true
+        links: [
+            { source: 's1', target: 'junc2', riesgo: 0.15, baseRiesgo: 0.15 },
+            { source: 'junc2', target: 'b1', riesgo: 0.3, baseRiesgo: 0.3 },
+            { source: 'b1', target: 'junc1', riesgo: 0.25, baseRiesgo: 0.25 },
+            { source: 'junc1', target: 'p1', riesgo: 0.85, baseRiesgo: 0.85 },
+            { source: 'junc1', target: 'b2', riesgo: 0.35, baseRiesgo: 0.35 },
+            { source: 'b2', target: 'junc3', riesgo: 0.4, baseRiesgo: 0.4 },
+            { source: 'junc3', target: 's2', riesgo: 0.2, baseRiesgo: 0.2 },
+            { source: 's2', target: 'bs2', riesgo: 0.1, baseRiesgo: 0.1 },
+            { source: 'bs2', target: 's3', riesgo: 0.08, baseRiesgo: 0.08 },
+            { source: 's3', target: 'p2', riesgo: 0.7, baseRiesgo: 0.7 },
+            { source: 'p2', target: 'bs1', riesgo: 0.6, baseRiesgo: 0.6 },
+            { source: 'bs1', target: 's1', riesgo: 0.05, baseRiesgo: 0.05 },
+            { source: 's1', target: 'p3', riesgo: 0.8, baseRiesgo: 0.8 },
+            { source: 'p3', target: 'junc2', riesgo: 0.75, baseRiesgo: 0.75 },
+            { source: 'junc3', target: 'bs3', riesgo: 0.12, baseRiesgo: 0.12 },
+            { source: 'bs3', target: 's4', riesgo: 0.15, baseRiesgo: 0.15 },
+            { source: 's4', target: 'p1', riesgo: 0.9, baseRiesgo: 0.9 },
+            { source: 'b1', target: 'p2', riesgo: 0.65, baseRiesgo: 0.65 }
+        ]
+    };
+
+    // Estado del agente
+    let currentNodeId = 's1';
+    let isFollowingPanicRoute = false;
+    let panicRoute = [];
+    let panicRouteIndex = 0;
+    const visitedNodes = new Map();
+    visitedNodes.set(currentNodeId, Date.now());
+
+    // Mapa de adyacencia
+    const adjacencyMap = {};
+    graphData.links.forEach(link => {
+        if (!adjacencyMap[link.source]) adjacencyMap[link.source] = [];
+        if (!adjacencyMap[link.target]) adjacencyMap[link.target] = [];
+        adjacencyMap[link.source].push({ node: link.target, link: link });
+        adjacencyMap[link.target].push({ node: link.source, link: link });
     });
 
-    const body = document.body;
-    const statusText = document.getElementById('current-status');
-    const feed = document.querySelector('.feed-content');
-    const panicBtn = document.getElementById('panic-btn');
+    // Dijkstra para ruta más segura
+    function findSafestPath(start, targetType) {
+        const distances = {};
+        const previous = {};
+        const unvisited = new Set();
 
-    // 2. GCN Simulation: Calculate neighborhood risk context
-    function applyGCNContext() {
-        cy.nodes().forEach(node => {
-            const neighbors = node.neighborhood('node');
-            if (neighbors.length > 0) {
-                const avgRisk = neighbors.reduce((acc, n) => acc + (n.data('risk') || 0), 0) / neighbors.length;
-                node.data('contextualRisk', avgRisk);
-
-                // Visual feedback of contextual risk (GCN)
-                if (avgRisk > 0.6) node.style('border-color', '#ff3e3e');
-                else if (avgRisk > 0.3) node.style('border-color', '#ffd700');
-            }
+        graphData.nodes.forEach(node => {
+            distances[node.id] = Infinity;
+            previous[node.id] = null;
+            unvisited.add(node.id);
         });
-        logMessage('GCN CONTEXT CALCULATED: NEIGHBORHOOD RISK AGGREGATED.');
+
+        distances[start] = 0;
+
+        while (unvisited.size > 0) {
+            let current = null;
+            let minDist = Infinity;
+            unvisited.forEach(nodeId => {
+                if (distances[nodeId] < minDist) {
+                    minDist = distances[nodeId];
+                    current = nodeId;
+                }
+            });
+            if (current === null) break;
+            unvisited.delete(current);
+
+            const currentNode = graphData.nodes.find(n => n.id === current);
+            if (currentNode.type === targetType) {
+                const path = [];
+                let step = current;
+                while (step !== null) {
+                    path.unshift(step);
+                    step = previous[step];
+                }
+                return path;
+            }
+
+            const neighbors = adjacencyMap[current] || [];
+            neighbors.forEach(({ node, link }) => {
+                const riskCost = link.riesgo * 100;
+                const alt = distances[current] + riskCost;
+                if (alt < distances[node]) {
+                    distances[node] = alt;
+                    previous[node] = current;
+                }
+            });
+        }
+        return [start];
     }
 
-    // 3. Gossip Protocol Simulation
-    function runGossipSim() {
-        setInterval(() => {
-            const edges = cy.edges();
-            const randomEdge = edges[Math.floor(Math.random() * edges.length)];
-
-            // Simulating a packet jump
-            const sourcePos = randomEdge.source().position();
-            const targetPos = randomEdge.target().position();
-
-            logMessage(`MESH GOSSIP: NODE ${randomEdge.source().id()} SYNCING WITH ${randomEdge.target().id()}`);
-        }, 15000);
+    // Variación dinámica del riesgo
+    function updateDynamicRisk() {
+        graphData.links.forEach(link => {
+            const variation = (Math.random() - 0.5) * 0.6;
+            link.riesgo = Math.max(0.05, Math.min(0.95, link.baseRiesgo + variation));
+        });
+        Graph.linkColor(Graph.linkColor());
     }
+    setInterval(updateDynamicRisk, 3000);
 
-    // 4. Enhanced Panic Sequence (AI Scanning)
-    async function runPanicSequence() {
-        logMessage('PANIC SIGNAL SENT TO HIVE ENGINE...');
-        body.classList.add('detected-state');
-        body.classList.remove('safe-state');
-        statusText.innerText = 'DETECTED';
+    // Inicialización del Grafo 3D
+    const Graph = ForceGraph3D()
+        (document.getElementById('cy'))
+        .graphData(graphData)
+        .backgroundColor('#0a0e14')
+        .nodeLabel('name')
+        .nodeVal(8)
+        .nodeColor(node => {
+            if (node.id === currentNodeId) return '#00ff95';
+            if (visitedNodes.has(node.id)) {
+                const age = Date.now() - visitedNodes.get(node.id);
+                const fadeFactor = Math.min(age / 60000, 1);
+                const r = Math.floor(204 - fadeFactor * 102);
+                const g = Math.floor(102 - fadeFactor * 51);
+                const b = Math.floor(51 - fadeFactor * 25);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+            return '#ff8c42';
+        })
+        .nodeOpacity(1.0)
+        .nodeResolution(20)
+        .linkColor(link => {
+            const risk = link.riesgo;
+            if (risk > 0.7) return 'rgba(255, 62, 62, 1.0)';
+            if (risk > 0.4) return 'rgba(255, 215, 0, 0.95)';
+            return 'rgba(0, 242, 255, 0.9)';
+        })
+        .linkWidth(link => 1.5 + (1 - link.riesgo) * 2.5)
+        .linkOpacity(1.0)
+        .linkDirectionalParticles(4)
+        .linkDirectionalParticleWidth(3)
+        .linkDirectionalParticleSpeed(0.008)
+        .enableNodeDrag(true) // ACTIVADO: Nodos maleables
+        .onNodeDragEnd(node => {
+            node.fx = node.x;
+            node.fy = node.y;
+            node.fz = node.z;
+            logMessage(`COORDENADAS FIJADAS: ${node.name.toUpperCase()}`);
+        })
+        .onNodeClick(node => {
+            logMessage(`📍 LOCATION: ${node.name.toUpperCase()}`);
+        })
+        .showNavInfo(false);
 
-        // Animated Scanning effect (Recursive Scan simulation)
-        const nodes = cy.nodes();
-        for (let i = 0; i < nodes.length; i++) {
-            nodes[i].addClass('scanning');
-            await new Promise(r => setTimeout(r, 200));
-            nodes[i].removeClass('scanning');
+    Graph.cameraPosition({ x: 0, y: 0, z: 600 }, { x: 0, y: 0, z: 0 }, 2000);
+
+    // Movimiento
+    function moveThief() {
+        if (isFollowingPanicRoute && panicRoute.length > 0) {
+            panicRouteIndex++;
+            if (panicRouteIndex >= panicRoute.length) {
+                isFollowingPanicRoute = false;
+                logMessage('✅ ARRIVED AT SAFE HIDEOUT');
+                return;
+            }
+            currentNodeId = panicRoute[panicRouteIndex];
+        } else {
+            const neighbors = adjacencyMap[currentNodeId] || [];
+            if (neighbors.length === 0) return;
+            const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            currentNodeId = next.node;
         }
 
-        // recalculate GAT Attention (simulated)
-        logMessage('RECALCULATING GAT ATTENTION COEFFICIENTS (α)...');
-        cy.edges().forEach(e => {
-            if (e.data('riesgo') > 0.5) {
-                e.data('alpha', 0.05);
-                e.style('line-color', '#ff3e3e');
-            } else {
-                e.data('alpha', 0.98);
-                e.style('line-color', '#00ff95');
-                e.addClass('active-route');
-            }
-        });
+        visitedNodes.set(currentNodeId, Date.now());
+        const currentNode = graphData.nodes.find(n => n.id === currentNodeId);
+        logMessage(`🏃 MOVING TO: ${currentNode.name.toUpperCase()}`);
 
-        logMessage('EVASIÓN PROTOCOL: OPTIMAL ROUTE SECURED.');
+        Graph.nodeColor(Graph.nodeColor());
+        updateSystemStatus(currentNode);
     }
+
+    setInterval(moveThief, 3000);
+
+    // UI y Logs
+    function updateSystemStatus(node) {
+        const statusText = document.getElementById('current-status');
+        const body = document.body;
+        if (node.type === 'police') {
+            statusText.innerText = 'HIGH ALERT';
+            body.classList.remove('safe-state');
+            body.classList.add('detected-state');
+            logMessage('⚠️ DANGER: POLICE ZONE');
+        } else if (node.type === 'hideout' || node.type === 'blindspot') {
+            statusText.innerText = 'SAFE';
+            body.classList.add('safe-state');
+            body.classList.remove('detected-state');
+        } else {
+            statusText.innerText = 'CAUTION';
+            body.classList.add('safe-state');
+            body.classList.remove('detected-state');
+        }
+    }
+
+    const feed = document.querySelector('.feed-content');
+    const panicBtn = document.getElementById('panic-btn');
 
     function logMessage(msg) {
         const time = new Date().toLocaleTimeString();
         feed.innerHTML = `> [${time}] ${msg}<br>` + feed.innerHTML;
-        // Keep only last 10 messages for performance
         const lines = feed.innerHTML.split('<br>');
-        if (lines.length > 10) feed.innerHTML = lines.slice(0, 10).join('<br>');
+        if (lines.length > 15) feed.innerHTML = lines.slice(0, 15).join('<br>');
     }
 
-    // Initialize logic
-    cy.ready(() => {
-        applyGCNContext();
-        runGossipSim();
-        logMessage('GHOST CLIENT INITIALIZED. STANDING BY.');
-    });
-
-    // Panic Button Listener
-    panicBtn.addEventListener('click', () => {
-        if (body.classList.contains('safe-state')) {
-            runPanicSequence();
+    function runPanicSequence() {
+        logMessage('🚨 PANIC ACTIVATED: CALCULATING SAFEST ROUTE...');
+        panicRoute = findSafestPath(currentNodeId, 'hideout');
+        if (panicRoute.length > 1) {
+            logMessage(`🛣️ ROUTE FOUND: ${panicRoute.length - 1} HOPS TO SAFETY`);
+            isFollowingPanicRoute = true;
+            panicRouteIndex = 0;
+            logMessage('🏃‍♂️ EXECUTING EVASION ROUTE...');
         } else {
-            // Reset state
-            body.classList.remove('detected-state');
-            body.classList.add('safe-state');
-            statusText.innerText = 'SAFE';
-            cy.edges().removeClass('active-route').style('line-color', 'rgba(0, 242, 255, 0.3)');
-            logMessage('SYSTEM RESET: AREA CLEAR');
+            logMessage('✅ ALREADY AT SAFE LOCATION');
         }
-    });
+    }
 
-    window.addEventListener('resize', () => {
-        cy.resize();
-        cy.fit();
-    });
+    panicBtn.addEventListener('click', runPanicSequence);
+
+    // Inicio
+    logMessage('GHOST CLIENT 3D INITIALIZED. STANDING BY.');
+    logMessage(`MONITORING ${graphData.nodes.length} NODES.`);
+    updateSystemStatus(graphData.nodes.find(n => n.id === currentNodeId));
 });

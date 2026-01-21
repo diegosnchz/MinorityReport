@@ -144,12 +144,17 @@ footer {
 
 #data-feed {
     flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .feed-content {
     font-size: 0.8rem;
     line-height: 1.4;
     color: rgba(0, 242, 255, 0.8);
+    overflow-y: auto;
+    flex-grow: 1;
 }
 
 .panic-btn {
@@ -287,4 +292,25 @@ footer {
 
 .cy-node-blindspot {
     background-color: #bb00ff;
+}
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(10, 14, 20, 0.6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-cyan);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--safe-green);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
 }
