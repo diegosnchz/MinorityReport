@@ -1,7 +1,7 @@
 # Architecture Design: Minority Report Crime Prediction System
 
 ## 1. GAN Architecture on Graphs
-The core of the predictive system is a Generative Adversarial Network (GAN) designed for graph data.
+The core of theedictive system is a Generative Adversarial Network (GAN) designed for graph data.
 
 ### **Generator (The Crime)**
 *   **Role**: Simulates the emergence of criminal patterns by generating synthetic node embeddings that mimic the distribution of "criminal" nodes or by predicting hidden edges (relationships) that signify criminal collaboration.
