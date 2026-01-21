@@ -10,7 +10,7 @@ Requiere:
 from neo4j import GraphDatabase
 import torch
 import numpy as np
-from oracle_net import create_oracle_net
+from src.models.oracle_net import create_oracle_net
 from typing import Dict, List, Tuple
 import networkx as nx
 

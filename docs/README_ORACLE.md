@@ -98,29 +98,48 @@ Basado en las especificaciones del sistema:
 #### Comparación Estimada (100 epochs):
 - **CPU**: ~15-20 minutos
 - **GPU**: ~2-4 minutos
+- **CPU**: ~2-3 minutos (en equipos modernos)
 
 ## Instalación
 
-### 1. Instalar Dependencias
+### 0. Requisitos de Python
 
-```bash
-pip install torch>=2.0.0
-pip install torch-geometric>=2.3.0
-pip install networkx>=3.0
-pip install numpy>=1.24.0
+**IMPORTANTE**: Se recomienda Python 3.11 o 3.12 para mejor compatibilidad con PyTorch.
+
+Si usas Python 3.14, el modelo funcionará en CPU (sin problemas).
+
+**Instalación rápida** (Windows):
+```powershell
+# 1. Crea el entorno virtual con Python 3.11
+py -3.11 -m venv venv311
+
+# 2. Activa
+.\venv311\Scripts\Activate.ps1
+
+# 3. Instala dependencias
+pip install --upgrade pip
+pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+pip install torch-geometric neo4j networkx numpy pandas matplotlib seaborn tqdm scipy scikit-learn
 ```
 
-Para PyTorch Geometric, puede que necesites instalar dependencias adicionales:
+### 1. Auto-detección de Device (GPU/CPU)
 
-```bash
-# Para CUDA 11.8 (verifica tu versión con nvidia-smi)
-pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
-```
+El código **detecta automáticamente** la mejor opción:
+- **GPU CUDA** (NVIDIA) si está disponible
+- **GPU MPS** (Apple Metal) si está disponible  
+- **CPU** como fallback universal
+
+No necesitas hacer nada especial, el modelo se configurará solo.
 
 ### 2. Verificar Instalación
 
 ```bash
 python3 -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}')"
+```
+
+O ejecuta el test de device:
+```bash
+python device_utils.py
 ```
 
 ## Uso
@@ -132,7 +151,8 @@ python oracle_net.py
 ```
 
 Esto ejecutará una prueba rápida del modelo con un grafo sintético y mostrará:
-- Configuración del dispositivo (GPU/CPU)
+- Configuración del dispositivo (GPU/CPU, con detalles)
+
 - Estadísticas del modelo (parámetros)
 - Análisis de seguridad de rutas
 - Top 5 rutas más seguras y peligrosas
@@ -307,6 +327,141 @@ Durante el entrenamiento se monitorean:
 2. **Validation Loss**: BCE en conjunto de validación
 3. **Validation Accuracy**: Precisión en clasificación de aristas (safe vs dangerous)
 4. **Learning Rate**: Ajustado automáticamente con ReduceLROnPlateau
+
+## Gestión Automática de GPU/CPU (device_utils.py)
+
+### 🎯 Auto-Detección de Dispositivo
+
+OracleNet incluye un módulo inteligente (`device_utils.py`) que **detecta y selecciona automáticamente** el mejor dispositivo:
+
+```python
+from device_utils import get_device, print_device_info
+
+# Auto-detección: GPU CUDA → GPU MPS → CPU
+device = get_device()
+print_device_info()  # Muestra información detallada del dispositivo
+```
+
+### Orden de Prioridad
+
+1. **GPU CUDA** (NVIDIA) - Más rápido, si está disponible
+2. **GPU MPS** (Apple Metal Performance Shaders) - Para Macs con Apple Silicon
+3. **CPU** - Compatible con cualquier sistema
+
+### ¿Cómo Funciona?
+
+```python
+# En oracle_net.py y train_oracle.py
+device = get_device()  # Automático
+
+# O specificar explícitamente
+device = get_device(force_cpu=True)  # Fuerza CPU
+
+# O via variable de entorno
+import os
+os.environ['FORCE_CPU'] = 'true'
+device = get_device()  # Respeta la variable
+```
+
+### Funciones Disponibles en device_utils.py
+
+| Función | Descripción | Ejemplo |
+|---------|-------------|---------|
+| `get_device()` | Detecta mejor dispositivo | `dev = get_device()` |
+| `get_device(force_cpu=True)` | Fuerza uso de CPU | `dev = get_device(force_cpu=True)` |
+| `is_cuda_available()` | Verifica CUDA disponible | `if is_cuda_available(): ...` |
+| `get_device_info()` | Dict con detalles del device | `info = get_device_info()` |
+| `print_device_info()` | Imprime información formateada | `print_device_info()` |
+| `empty_cuda_cache()` | Libera memoria de GPU | `empty_cuda_cache()` |
+
+### Información del Device
+
+```python
+from device_utils import print_device_info
+
+print_device_info()
+```
+
+Salida típica:
+```
+=== Device Configuration ===
+Device: cuda (NVIDIA GPU)
+GPU Name: NVIDIA GeForce RTX 3090
+CUDA Capability: 8.6
+Total VRAM: 24 GB
+Allocated Memory: 2.1 GB
+Reserved Memory: 3.0 GB
+Available Memory: 21.9 GB
+
+PyTorch Version: 2.0.1
+CUDA Version: 11.8
+cuDNN Version: 8.6
+```
+
+### Comportamiento Automático en Scripts
+
+#### oracle_net.py
+```python
+device = get_device()  # Automático
+model = create_oracle_net(num_features=16, device=device)
+print_device_info()  # Muestra configuración
+
+# Modelo listo en GPU/CPU según disponibilidad
+```
+
+#### train_oracle.py
+```python
+device = get_device()  # Automático
+model = train_oracle_net(num_epochs=200, device=device)
+# Entrenamiento 5-10x más rápido en GPU si está disponible
+```
+
+### Casos de Uso
+
+#### 🖥️ Desarrollador con GPU NVIDIA
+```powershell
+python oracle_net.py      # Usa GPU automáticamente (2-4 min para entrenamiento)
+```
+
+#### 💻 Desarrollador sin GPU (MacBook, laptops, etc.)
+```bash
+python oracle_net.py      # Usa CPU automáticamente (fallback transparente)
+```
+
+#### 🔧 Forzar CPU (para debugging)
+```powershell
+$env:FORCE_CPU = 'true'
+python oracle_net.py      # Usa CPU incluso si GPU está disponible
+```
+
+### Optimizaciones Automáticas
+
+- **GPU**: Modelos cargados directamente en VRAM
+- **CPU**: Modelos en RAM, operaciones optimizadas con MKL
+- **Fallback**: Si GPU falla, automáticamente intenta CPU
+
+### Compatibilidad Hardware
+
+#### ✅ GPU Soportadas
+- NVIDIA: GeForce RTX (cualquier serie), Tesla, Quadro (Compute Capability ≥ 5.0)
+- Apple: Mac M1/M2/M3 con MPS
+- AMD: ROCm (experimental)
+
+#### ❌ GPU No Soportadas
+- NVIDIA Quadro K4200 (Kepler, Compute Cap 3.0) - **Usará CPU automáticamente**
+- GPU antiguas (pre-2012)
+- Intel Arc (parcial)
+
+### Rendimiento Esperado
+
+| Device | 100 Epochs | 200 Epochs |
+|--------|-----------|-----------|
+| GPU NVIDIA RTX 3090 | 1-2 min | 2-4 min |
+| GPU NVIDIA Quadro P6000 | 2-4 min | 5-8 min |
+| CPU Intel Xeon E5 (8c) | 15-20 min | 30-40 min |
+| CPU Apple M1/M3 | 5-10 min | 10-20 min |
+
+**Nota**: Quadro K4200 en nuestro sistema usará CPU como fallback (no GPU).
 
 ## Nuevas Características: GraphSAGE con Mini-batch Training
 

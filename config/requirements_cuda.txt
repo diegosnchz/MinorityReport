@@ -1,0 +1,40 @@
+# =============================================================================
+# Requirements para MinorityReport - OracleNet con CUDA Support
+# =============================================================================
+# Python: 3.11 o 3.12 (requerido para CUDA)
+# GPU: NVIDIA con CUDA 11.8
+# =============================================================================
+
+# PyTorch con CUDA 11.8 (instalar primero con el comando especial)
+# pip install torch==2.0.1 torchvision==0.15.2 torchaudio==0.2.0 --index-url https://download.pytorch.org/whl/cu118
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==0.2.0
+
+# PyTorch Geometric y extensiones
+torch-geometric>=2.3.0
+# torch-scatter y torch-sparse requieren instalación especial:
+# pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
+
+# Graph databases
+neo4j>=5.0.0
+
+# Graph processing
+networkx>=3.0
+
+# Numerical computing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities
+tqdm>=4.65.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+
+# Optional: Jupyter para notebooks interactivos
+# jupyter>=1.0.0
+# ipykernel>=6.20.0

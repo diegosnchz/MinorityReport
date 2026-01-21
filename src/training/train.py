@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from models import Generator, Discriminator
+from src.models.models import Generator, Discriminator
 from torch_geometric.data import Data
 
 def train_gan(num_epochs=100, num_nodes=100, feature_dim=16):

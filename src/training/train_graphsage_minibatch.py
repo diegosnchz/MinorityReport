@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch_geometric.data import Data
 from torch_geometric.loader import NeighborLoader
-from graphsage_model import create_graphsage_model, GraphSAGEMiniBatch, GraphSAGEWithClustering
+from src.models.graphsage_model import create_graphsage_model, GraphSAGEMiniBatch, GraphSAGEWithClustering
 from typing import Optional, Literal, Tuple
 import time
 
