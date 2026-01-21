@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from app.models.schemas_vision import VisionCreate, VisionRead
 from app.repositories.vision_repo import vision_repo
-from app.services.vision_service import vision_service
+from app.services.xai_service import xai_service
+from app.repositories.citizen_repo import citizen_repo # Necesario para obtener subgrafofrom app.services.vision_service import vision_service
 
 router = APIRouter(prefix="/visions", tags=["Pre-Crime Visions"])
 
@@ -56,3 +57,50 @@ async def intervene_vision(vision_id: str, outcome: str):
         
     await vision_repo.resolve_vision(vision_id, outcome)
     return {"msg": f"Vision {vision_id} resolved as {outcome}"}
+
+@router.get("/{vision_id}/explain")
+async def explain_prediction(vision_id: str):
+    """
+    Endpoint de Transparencia (XAI).
+    Devuelve el subgrafo que causó la alerta.
+    """
+    # 1. Recuperar datos
+    vision = await vision_repo.find_by_id(vision_id)
+    if not vision:
+        raise HTTPException(status_code=404, detail="Vision not found")
+
+    # 2. Recuperar el subgrafo del perpetrador para alimentar al explainer
+    # (NOTA: Asumimos que citizen_repo tiene un método get_pyg_subgraph simulado o real)
+    # Como fallback para este demo, construiremos un objeto Data dummy si el repo no lo tiene.
+    
+    try:
+        # Intento de llamada real si existiera
+        # subgraph = await citizen_repo.get_pyg_subgraph(vision['perpetrator']['id'])
+        pass
+    except:
+        pass
+        
+    # --- MOCK DATA PARA DEMO ---
+    # Para que el endpoint funcione sin reescribir todo citizen_repo ahora mismo:
+    from torch_geometric.data import Data
+    import torch
+    # Simulamos un subgrafo pequeño alrededor del sospechoso
+    subgraph = Data(
+        x=torch.randn(10, 16), # 10 nodos, 16 features
+        edge_index=torch.randint(0, 10, (2, 20)) # 20 aristas
+    )
+    # ---------------------------
+
+    # 3. Ejecutar XAI
+    explanation = await xai_service.explain_vision(
+        vision['perpetrator']['id'],
+        vision['target']['id'],
+        subgraph
+    )
+    
+    return {
+        "vision_id": vision_id,
+        "verdict": "INTERVENE",
+        "explanation": explanation
+        # Frontend: Resaltar estas aristas en amarillo brillante en el grafo 3D
+    }

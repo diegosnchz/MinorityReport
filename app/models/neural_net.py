@@ -47,3 +47,54 @@ class PoliceDiscriminator(torch.nn.Module):
         x = F.dropout(x, p=0.3, training=self.training)
         x = self.conv2(x, edge_index)
         return torch.sigmoid(x) # Probability: 0 (Noise) to 1 (Real Crime/Risk)
+
+# --- TGN IMPLEMENTATION (PART 10) ---
+from torch_geometric.nn import TGNMemory, TransformerConv
+from torch_geometric.nn.models.tgn import (LastNeighborLoader, IdentityMessage,
+                                           LastAggregator)
+
+class PrecogTGN(torch.nn.Module):
+    def __init__(self, num_nodes, raw_msg_dim, memory_dim, time_dim, embedding_dim):
+        super().__init__()
+        # 1. EL LÓBULO TEMPORAL (Memoria)
+        # Almacena el estado oculto (S) de cada ciudadano y ubicación.
+        # Evoluciona con cada interacción.
+        self.memory = TGNMemory(
+            num_nodes=num_nodes,
+            raw_msg_dim=raw_msg_dim,
+            memory_dim=memory_dim,
+            time_dim=time_dim,
+            message_module=IdentityMessage(raw_msg_dim, memory_dim, time_dim),
+            aggregator_module=LastAggregator(),
+        )
+
+        # 2. EL LÓBULO DE RAZONAMIENTO (Embedding)
+        # Usa Graph Attention (Transformer) sobre la memoria actual + vecinos
+        self.embedding_gnn = TransformerConv(
+            in_channels=memory_dim,
+            out_channels=embedding_dim,
+            heads=2,
+            dropout=0.1
+        )
+
+        # 3. EL PRECOG (Clasificador)
+        # Decide si el enlace (src -> dst) es un crimen futuro
+        self.predictor = torch.nn.Linear(embedding_dim * 2, 1)
+
+    def forward(self, n_id, edge_index, edge_time):
+        """
+        n_id: IDs de los nodos involucrados en el evento actual
+        """
+        # A. Recuperar la memoria actualizada hasta este milisegundo
+        # (El TGNMemory se actualiza externamente antes del forward)
+        memory = self.memory(n_id)
+
+        # B. Generar Embeddings Espaciales
+        # Combinamos la memoria histórica con la estructura actual del grafo
+        emb = self.embedding_gnn(memory, edge_index)
+        return emb
+
+    def predict_link(self, src_emb, dst_emb):
+        # Concatenar embedding de Ciudadano + Ubicación para predecir riesgo
+        h = torch.cat([src_emb, dst_emb], dim=1)
+        return torch.sigmoid(self.predictor(h))
