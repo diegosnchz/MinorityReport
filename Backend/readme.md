@@ -199,3 +199,75 @@ Para destacar en la parte de "Operadores", aseguraos de explicar bien el concept
 Decid: "Usamos una cola FIFO porque si 50 ladrones envían alertas a la vez, no queremos que la API se caiga intentando recalcular la IA 50 veces simultáneamente. La API solo recibe (rápido) y el Executor procesa (ordenado)."
 
 ¿Queréis que profundice en cómo conectar la salida del Executor con el Frontend para que se dibuje la línea roja/verde?
+
+¡Claro! Olvidad por un momento el código complejo. Imaginad que estáis montando una Central de Emergencias del 112, pero para ladrones.
+
+Vosotros dos sois el Centro de Operaciones. Vuestro trabajo es conectar a la gente de la calle (Frontend) con los planos de la ciudad (Base de datos) y con el estratega genial (la IA).
+
+Aquí tenéis vuestra misión explicada "para humanos":
+
+👤 Integrante A: "El Recepcionista y el Archivero"
+(Tu foco: API y Base de Datos)
+
+Tú eres la cara pública del servidor y el guardián de la información.
+
+El Recepcionista (API):
+
+¿Qué haces? Creas la ventanilla única. Cuando un ladrón en la calle aprieta el "Botón de Pánico", tu código es el que descuelga el teléfono.
+
+Tarea: Programar una función (Endpoint) que diga: "Recibido, Ladrón 1. He anotado que hay policía en la calle X. No cuelgues, estamos procesando."
+
+El Archivero (Neo4j):
+
+¿Qué haces? Tienes la llave de la habitación de los archivos (Neo4j). El "Executor" (tu compañero) te pedirá datos, y tú eres quien sabe cómo buscar en el archivador y cómo escribir notas nuevas en los expedientes.
+
+Tarea: Escribir el código que se conecta a Neo4j para decir: "Oye, base de datos, marca el nodo 'Calle Gran Vía' como PELIGROSO ahora mismo".
+
+En el proyecto final: Sin ti, la App del móvil no conecta con nada y los cambios en el mapa no se guardan. Eres la entrada y la salida de datos.
+
+👤 Integrante B: "El Controlador de Tráfico"
+(Tu foco: Cola FIFO, Executor y Gossip)
+
+Tú eres quien gestiona el caos para que el sistema no explote.
+
+La Cola (Queue):
+
+¿Qué haces? Imagina que llaman 50 ladrones a la vez. Si intentamos atender a todos al mismo tiempo, nos volvemos locos. Tú pones a las llamadas en una fila india (Fila 1, Fila 2, Fila 3...).
+
+Tarea: Crear una lista de espera inteligente.
+
+El Ejecutor (Worker):
+
+¿Qué haces? Eres el operario que va cogiendo las tareas de esa fila una por una. Coges una alerta, llamas al Archivero (Integrante A) para actualizar el mapa, y luego llamas a la IA para que calcule la ruta.
+
+Tarea: Un bucle infinito (while True) que siempre está preguntando: "¿Hay algo en la cola? ¿Sí? ¡A trabajar! ¿No? Descanso un poco."
+
+El Cotilla (Protocolo Gossip):
+
+¿Qué haces? Una vez confirmas un peligro, lo gritas a los cuatro vientos.
+
+Tarea: Simular que envías un mensaje a "todos los usuarios cercanos" avisando del peligro.
+
+En el proyecto final: Sin ti, si dos personas piden ayuda a la vez, el servidor se bloquea. Tú garantizas que el sistema fluya suavemente y das la orden de "Ejecutar IA".
+
+🤝 ¿Cómo funciona vuestra parte en el "Juego"?
+Veámoslo con un ejemplo de película: Tom Cruise está huyendo.
+
+CLIENTE (El Fantasma): Tom ve un policía y pulsa el botón rojo en su móvil.
+
+INTEGRANTE A (API): Tu código recibe el aviso. "¡Oído, Tom! Lo paso a la sala de control".
+
+INTEGRANTE B (Cola): Pone el aviso de Tom en la bandeja de "Pendiente".
+
+INTEGRANTE B (Executor): Ve el papel en la bandeja. Lo coge y dice: "¡Alerta en sector 4! ¡Voy a actualizar el mapa!".
+
+INTEGRANTE A (Database): Tu código entra en Neo4j y pinta de rojo la calle del sector 4.
+
+INTEGRANTE B (Llamada a IA): "¡Oye Oráculo (IA), el mapa ha cambiado, calcula una ruta nueva!".
+
+RESULTADO: El sistema devuelve a Tom una ruta por callejones oscuros.
+
+¿Por qué esto os da buena nota?
+Porque estáis separando tareas (Desacoplamiento). Si el Integrante A (Recepcionista) tuviera que colgar el teléfono, buscar el archivo, calcular la ruta y volver al teléfono, tardaría mucho y la línea estaría ocupada para otros. Al tener al Integrante B procesando en segundo plano, vuestro sistema es rápido, profesional y escalable.
+
+¿Os queda más claro así quién hace qué?
