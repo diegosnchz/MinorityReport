@@ -14,6 +14,7 @@ El sistema sigue un modelo **Cliente-Servidor con Persistencia en Grafos**, divi
 
 ### Tecnologías Clave (Basado en Apuntes de Clase)
 * **Core AI:** GCN (Contexto) y GAT (Atención Selectiva).
+* **Precog v2.0 (Advanced):** TGN (Memoria Temporal) y GNNExplainer (XAI).
 * **Persistencia:** Neo4j (Graph Database).
 * **Ejecución:** Modelo `Executor` con Colas (FIFO) para gestión de crisis.
 * **Red:** Simulación de protocolo Gossip para comunicación entre ladrones.
