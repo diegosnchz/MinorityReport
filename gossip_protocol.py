@@ -39,11 +39,17 @@ class EdgeNode:
             peer = self.select_peer()
             if peer:
                 # 2. Push/Pull Sync
-                # In a real system, this would be an RPC or Socket call
-                # response = peer.rpc_gossip(self.prepare_digest())
-                # self.reconcile(response)
+                # Simulating an exchange of "Graph Diffs" (random vector updates)
+                digest = self.prepare_digest()
+                print(f"[Node {self.node_id}] 📡 Contacting [Node {peer.node_id}] | My Version: {digest['version']}")
                 
-                print(f"Node {self.node_id} gossiping with {peer.node_id}...")
+                # Simulate receiving an update that increases our knowledge (version)
+                if random.random() > 0.5:
+                     with self.lock:
+                         self.local_graph_view['version'] += 1
+                         print(f"   ↳ [Node {self.node_id}] ✅ Synced with {peer.node_id}. New Version: {self.local_graph_view['version']}")
+                else:
+                     print(f"   ↳ [Node {self.node_id}] ➖ No updates needed.")
             
             # 3. Wait (e.g., 100ms)
             time.sleep(0.1)
@@ -55,12 +61,19 @@ if __name__ == "__main__":
     for i in range(5):
         nodes.append(EdgeNode(id=i, neighbors=[], local_graph_view={'version': 0}))
 
-    # Connect them randomly
+    # Connect them randomly (Small World Network)
     for node in nodes:
         potential = [n for n in nodes if n != node]
         node.neighbors = random.sample(potential, 2)
 
+    print("--- 🕵️ Minority Report: Distributed Edge Gossip Network Started ---")
+    print("Nodes are exchanging local graph embeddings to synchronize criminal patterns...")
+    
     # Start Gossip Threads
-    # threads = [threading.Thread(target=n.start_gossip_loop) for n in nodes]
-    # for t in threads: t.start()
-    print("Gossip Protocol Logic Defined.")
+    threads = [threading.Thread(target=n.start_gossip_loop, daemon=True) for n in nodes]
+    for t in threads: 
+        t.start()
+    
+    # Run simulation for 5 seconds then stop
+    time.sleep(5)
+    print("--- Simulation Ended ---")
