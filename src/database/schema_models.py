@@ -2,36 +2,41 @@ from enum import Enum
 
 class NodeLabel(str, Enum):
     """
-    Labels for Nodes in the Knowledge Graph.
-    Ref: Section 1 & 4 of Technical Notes.
+    Labels for Nodes in the Pre-Crime Knowledge Graph.
     """
+    CITIZEN = "Citizen"
     LOCATION = "Location"
-    HIDEOUT = "Hideout"
-    POLICE_STATION = "PoliceStation"
-    USER = "User"
+    VISION = "Vision"  # "Red Ball" generated node (optional, or represented by relationship)
+    EVENT = "Event"    # Crime event
 
 class RelationshipType(str, Enum):
     """
-    Types of Relationships between Nodes.
+    Types of Relationships.
     """
-    CONNECTED_TO = "CONNECTED_TO"  # Bidirectional/Undirected concept (Street implementation)
-    WATCHED_BY = "WATCHED_BY"      # Directed: PoliceStation -> Location
-    HAS_TARGET = "HAS_TARGET"      # User -> Location (Goal)
+    KNOWS = "KNOWS"                 # Social: Citizen -> Citizen
+    WAS_AT = "WAS_AT"               # Movement: Citizen -> Location
+    COMMITTED_CRIME = "COMMITTED_CRIME" # History: Citizen -> Location
+    WILL_COMMIT = "WILL_COMMIT"     # Prediction: Citizen -> Location (The "Red Ball")
 
 class NodeProperty(str, Enum):
     """
     Property keys for Nodes.
     """
-    ID = "uid"
-    X = "x"
-    Y = "y"
-    TYPE = "type"
-    CAPACITY = "capacity"
+    ID = "id"
     NAME = "name"
+    RISK_BASE = "risk_base"
+    STATUS = "status"
+    TYPE = "type"
+    SECURITY_LEVEL = "security_level"
 
 class EdgeProperty(str, Enum):
     """
     Property keys for Relationships.
     """
-    DISTANCE = "distance"
-    RISK_LEVEL = "risk_level"  # Float 0.0 - 1.0
+    TIMESTAMP = "timestamp"
+    DURATION = "duration_minutes"
+    DATE = "date"
+    TYPE = "type"
+    SEVERITY = "severity"
+    RISK_SCORE = "risk_score"
+    COLOR = "color"

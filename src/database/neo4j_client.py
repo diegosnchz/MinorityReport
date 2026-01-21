@@ -95,6 +95,31 @@ class Neo4jClient:
             logger.error(f"Query execution error: {e}")
             raise e
 
+    def update_predictions(self, predictions_list: List[Dict[str, Any]]):
+        """
+        Receives a list of dictionaries: [{'source': ID, 'target': ID, 'risk': 0.95}, ...]
+        Creates WILL_COMMIT relationships marked in RED.
+        """
+        if self._driver is None:
+            self.connect()
+            
+        query = """
+        UNWIND $batch as row
+        MATCH (p:Citizen {id: row.source})
+        MATCH (l:Location {id: row.target})
+        MERGE (p)-[r:WILL_COMMIT]->(l)
+        SET r.risk_score = row.risk,
+            r.color = '#FF0000',  // Rojo "Minority Report"
+            r.timestamp = timestamp()
+        """
+        try:
+            with self._driver.session() as session:
+                session.run(query, batch=predictions_list)
+                logger.info(f"⚡ {len(predictions_list)} prediction(s) inserted into Neo4j.")
+        except Exception as e:
+            logger.error(f"Failed to insert predictions: {e}")
+            raise
+
     def __enter__(self):
         return self
 
