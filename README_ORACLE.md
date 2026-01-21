@@ -308,8 +308,60 @@ Durante el entrenamiento se monitorean:
 3. **Validation Accuracy**: Precisión en clasificación de aristas (safe vs dangerous)
 4. **Learning Rate**: Ajustado automáticamente con ReduceLROnPlateau
 
+## Nuevas Características: GraphSAGE con Mini-batch Training
+
+### 🚀 GraphSAGE Implementation (NUEVO)
+
+Se ha implementado GraphSAGE con soporte completo para:
+
+#### 1. **Mini-batch Gradient Descent**
+- Entrenamiento con lotes muy pequeños (batch_size: 16-32)
+- Uso de `NeighborLoader` de PyTorch Geometric
+- Reducción de memoria para grafos grandes
+
+#### 2. **Neighbor Sampling**
+- Muestreo de vecinos por capa: `[10, 5]`
+- Escalabilidad mejorada para grafos muy grandes
+- Entrenamiento eficiente sin cargar todo el grafo en memoria
+
+#### 3. **Múltiples Métodos de Agregación**
+- **Mean**: Agregación promedio (similar a GCN)
+- **LSTM**: Agregación secuencial con LSTM
+- **Pooling**: Max pooling element-wise
+
+#### 4. **Soporte de Clustering**
+- Clustering suave con asignaciones aprendibles
+- Aprendizaje de estructura jerárquica
+- Regularización de entropía
+
+#### 5. **Archivos Nuevos**
+- `graphsage_model.py`: Implementación de modelos GraphSAGE
+- `train_graphsage_minibatch.py`: Script de entrenamiento con mini-batch
+- `test_graphsage.py`: Tests de validación
+- `GRAPHSAGE_README.md`: Documentación detallada
+
+#### Uso Rápido
+
+```python
+from train_graphsage_minibatch import train_graphsage_minibatch
+
+# Entrenar con mini-batch y neighbor sampling
+model = train_graphsage_minibatch(
+    aggregator='mean',      # o 'lstm', 'pool'
+    num_epochs=100,
+    batch_size=32,          # Lotes pequeños
+    num_neighbors=[10, 5],  # Muestreo de vecinos
+    learning_rate=0.01
+)
+```
+
+Ver `GRAPHSAGE_README.md` para más detalles.
+
 ## Trabajo Futuro
 
+- [x] ~~GraphSAGE con mini-batch training y neighbor sampling~~
+- [x] ~~Múltiples métodos de agregación (mean, LSTM, pooling)~~
+- [x] ~~Clustering support~~
 - [ ] Implementar algoritmo A* modificado para pathfinding
 - [ ] Integración directa con Neo4j para datos reales
 - [ ] Reinforcement Learning para optimización dinámica de rutas
@@ -321,8 +373,10 @@ Durante el entrenamiento se monitorean:
 
 1. **Graph Convolutional Networks (GCN)**: Kipf & Welling (2016)
 2. **Graph Attention Networks (GAT)**: Veličković et al. (2018)
-3. **PyTorch Geometric**: Fey & Lenssen (2019)
-4. **Generative Adversarial Networks**: Goodfellow et al. (2014)
+3. **GraphSAGE**: Hamilton et al. "Inductive Representation Learning on Large Graphs" (NeurIPS 2017)
+4. **PyTorch Geometric**: Fey & Lenssen (2019)
+5. **Generative Adversarial Networks**: Goodfellow et al. (2014)
+6. **GraphSAGE Tutorial**: https://mlabonne.github.io/blog/posts/2022-04-06-GraphSAGE.html
 
 ## Licencia
 
