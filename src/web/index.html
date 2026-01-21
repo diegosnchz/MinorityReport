@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ghost Client - Evasion Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+
+        #mynetwork {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #334155;
+            background-color: #1e293b;
+        }
+
+        .btn {
+            @apply px-4 py-2 rounded font-bold transition-colors;
+        }
+
+        .btn-primary {
+            @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+        }
+
+        .btn-danger {
+            @apply bg-red-600 hover:bg-red-700 text-white;
+        }
+    </style>
+</head>
+
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-400">👻 THE GHOST CLIENT</h1>
+                <p class="text-sm text-slate-400">Minority Report Evasion Interface</p>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="loadGraph()" class="btn btn-primary">🔄 Sync Map</button>
+                <button onclick="predictEscape()" class="btn btn-danger">⚡ AI PREDICT (GAT)</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                    <h2 class="text-xl font-bold mb-2 text-indigo-300">Status</h2>
+                    <div id="status-text" class="text-sm text-green-400">System Online</div>
+                </div>
+
+                <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                    <h2 class="text-xl font-bold mb-2 text-pink-300">AI Recommendations</h2>
+                    <ul id="recommendations-list" class="space-y-2 text-sm">
+                        <li class="text-slate-500 italic">No predictions yet...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Graph Viz -->
+            <div class="lg:col-span-3">
+                <div id="mynetwork" class="rounded shadow-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration for Vis.js
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 20,
+                font: { size: 14, color: '#ffffff' },
+                borderWidth: 2
+            },
+            edges: {
+                width: 2,
+                color: { color: '#64748b', highlight: '#fbbf24' },
+                smooth: { type: 'continuous' }
+            },
+            physics: {
+                stabilization: false,
+                barnesHut: { gravitationalConstant: -8000, springConstant: 0.04, springLength: 95 }
+            }
+        };
+
+        let network = null;
+
+        async function loadGraph() {
+            document.getElementById('status-text').innerText = "Fetching City Data...";
+            try {
+                const response = await fetch('http://localhost:8000/graph');
+                const data = await response.json();
+
+                const nodes = new vis.DataSet(data.nodes.map(n => ({
+                    id: n.id,
+                    label: n.is_hideout ? "🏠 Hideout" : "📍 Street",
+                    color: n.is_hideout ? "#10b981" : "#6366f1", // Green for hideout, Indigo for street
+                    title: `Coords: (${n.x}, ${n.y})`
+                })));
+
+                const edges = new vis.DataSet(data.edges.map(e => ({
+                    from: e.from,
+                    to: e.to,
+                    label: e.risk > 0.5 ? "⚠️ High Risk" : "",
+                    color: e.risk > 0.5 ? "#ef4444" : "#64748b",
+                    width: e.risk > 0.5 ? 4 : 1
+                })));
+
+                const container = document.getElementById('mynetwork');
+                network = new vis.Network(container, { nodes, edges }, options);
+
+                document.getElementById('status-text').innerText = `Sync Complete. ${data.nodes.length} Nodes loaded.`;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status-text').innerText = "Error: API Offline";
+            }
+        }
+
+        async function predictEscape() {
+            document.getElementById('status-text').innerText = "🔮 Running GAT Inference...";
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ num_samples: 1 })
+                });
+                const result = await response.json();
+
+                const list = document.getElementById('recommendations-list');
+                list.innerHTML = "";
+
+                result.recommendations.forEach((rec, i) => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center p-2 bg-slate-700 rounded";
+                    li.innerHTML = `<span>Node ${rec.node_id.substring(0, 6)}...</span> <span class="font-bold text-yellow-400">${rec.safety_score.toFixed(2)}</span>`;
+                    list.appendChild(li);
+
+                    // Highlight on graph
+                    if (network) {
+                        network.selectNodes([rec.node_id]);
+                    }
+                });
+
+                document.getElementById('status-text').innerText = "Prediction Received.";
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status-text').innerText = "Error: AI Failed";
+            }
+        }
+
+        // Auto Load
+        window.onload = loadGraph;
+    </script>
+</body>
+
+</html>
