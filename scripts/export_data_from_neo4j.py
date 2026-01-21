@@ -146,20 +146,20 @@ def main():
     parser.add_argument(
         "--uri",
         type=str,
-        default="bolt://localhost:7687",
-        help="Neo4j URI (default: bolt://localhost:7687)"
+        default=None,
+        help="Neo4j URI (default: from NEO4J_URI env or bolt://localhost:7687)"
     )
     parser.add_argument(
         "--user",
         type=str,
-        default="neo4j",
-        help="Neo4j username (default: neo4j)"
+        default=None,
+        help="Neo4j username (default: from NEO4J_USER env or neo4j)"
     )
     parser.add_argument(
         "--password",
         type=str,
-        default="secret_password_123",
-        help="Neo4j password (default: secret_password_123)"
+        default=None,
+        help="Neo4j password (default: from NEO4J_PASSWORD env or default)"
     )
     
     args = parser.parse_args()

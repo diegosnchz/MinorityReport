@@ -13,6 +13,8 @@ Based on the data structure from dataEngineer branch:
 import torch
 import pandas as pd
 import logging
+import os
+from datetime import datetime
 from typing import Tuple, Optional
 from torch_geometric.data import Data
 
@@ -39,23 +41,27 @@ class Neo4jDataFetcher:
     - Relationships: (:Citizen)-[:VISITED]->(:Location)
     """
     
-    def __init__(self, uri: str = "bolt://localhost:7687", 
-                 user: str = "neo4j", 
-                 password: str = "secret_password_123"):
+    def __init__(self, uri: str = None, 
+                 user: str = None, 
+                 password: str = None):
         """
         Initialize Neo4j connection.
         
         Args:
-            uri: Neo4j connection URI
-            user: Database username
-            password: Database password
+            uri: Neo4j connection URI (default: from NEO4J_URI env or bolt://localhost:7687)
+            user: Database username (default: from NEO4J_USER env or neo4j)
+            password: Database password (default: from NEO4J_PASSWORD env or prompts if not set)
         """
         if not NEO4J_AVAILABLE:
             raise ImportError("Neo4j driver not installed. Install with: pip install neo4j")
         
-        self.uri = uri
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
-        logger.info(f"Connected to Neo4j at {uri}")
+        # Get credentials from environment or use defaults
+        self.uri = uri or os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        user = user or os.getenv("NEO4J_USER", "neo4j")
+        password = password or os.getenv("NEO4J_PASSWORD", "secret_password_123")
+        
+        self.driver = GraphDatabase.driver(self.uri, auth=(user, password))
+        logger.info(f"Connected to Neo4j at {self.uri}")
     
     def close(self):
         """Close Neo4j connection."""
@@ -133,7 +139,7 @@ class Neo4jDataFetcher:
         df = pd.DataFrame(data)
         
         # Age normalization (same as dataEngineer/graph_loader.py)
-        current_year = 2026
+        current_year = datetime.now().year
         df['born'] = pd.to_numeric(df['born'], errors='coerce').fillna(current_year)
         df['age'] = (current_year - df['born']) / 100.0
         
@@ -258,9 +264,9 @@ class Neo4jDataFetcher:
         return data
 
 
-def fetch_graph_data(uri: str = "bolt://localhost:7687",
-                     user: str = "neo4j",
-                     password: str = "secret_password_123") -> Optional[Data]:
+def fetch_graph_data(uri: str = None,
+                     user: str = None,
+                     password: str = None) -> Optional[Data]:
     """
     Convenience function to fetch graph data from Neo4j.
     
