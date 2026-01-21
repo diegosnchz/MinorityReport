@@ -20,6 +20,12 @@ Paso 1: Definir los Datos (Shared)
 Primero, acordad qué datos viajan por el sistema en models.py.
 
 Python
+# Base de datos
+Username:
+neo4j
+Password:
+eJcc40rfUud7IbOLvgX87dsRyT-uhV1FG81v6OnOL7s
+
 
 # models.py
 from pydantic import BaseModel
