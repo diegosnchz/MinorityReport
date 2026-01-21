@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Crime Division | Dashboard</title>
     <script src="//unpkg.com/3d-force-graph"></script>
     <style>
@@ -21,10 +22,16 @@
 
         #sidebar {
             width: 300px;
+            min-width: 300px;
+            /* Prevent squashing */
+            flex-shrink: 0;
+            /* Force fixed width */
             border-right: 1px solid #333;
             padding: 20px;
             overflow-y: auto;
             background: #0a0a0a;
+            box-sizing: border-box;
+            /* Include padding in width */
         }
 
         #graph-container {
@@ -60,6 +67,25 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.8em;
+        }
+
+        @media (max-width: 768px) {
+            #dashboard {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: 300px;
+                order: 2;
+                border-right: none;
+                border-top: 1px solid #333;
+            }
+
+            #graph-container {
+                height: 100vh;
+                order: 1;
+            }
         }
     </style>
 </head>
@@ -116,6 +142,7 @@
         async function loadVisions() {
             try {
                 const response = await fetch('/visions/active');
+                if (!response.ok) throw new Error('Network response was not ok');
                 const visions = await response.json();
 
                 const container = document.getElementById('vision-list');
@@ -137,32 +164,27 @@
                             <span class="badge">${new Date(v.timestamp).toLocaleTimeString()}</span>
                         </div>
                     `;
-                    // Al hacer clic en la tarjeta, enfocar en el nodo (si existe en el grafo actual)
                     div.onclick = () => {
-                        // En un sistema real, buscaríamos el nodo por ID
                         console.log("Focusing on vision:", v.id);
                     };
                     container.appendChild(div);
                 });
             } catch (e) {
                 console.error("Error loading visions:", e);
+                // Dont show error to user in UI if its just polling noise, or show a status indicator
             }
         }
 
         async function triggerSimulation() {
             try {
-                await fetch('/simulation/step', { method: 'POST' });
+                const res = await fetch('/simulation/step', { method: 'POST' });
+                if (!res.ok) throw new Error('Simulation failed');
                 // Recargar datos después de simular
                 loadVisions();
-                // Forzar recarga del grafo (esto es un poco brusco, idealmente websockets)
-                // Graph.jsonUrl('/visions/graph?limit=200'); 
-                // ForceGraph doesn't auto-refresh just by calling jsonUrl again with same url usually, 
-                // but for demo we can rely on page refresh or assume library handles it.
-                // Let's just reload page parts or re-fetch graph data
-                // Quick hack for demo: logic to refresh data
                 Graph.jsonUrl('/visions/graph?limit=200&t=' + new Date().getTime());
             } catch (e) {
                 console.error("Simulation failed:", e);
+                alert("Trigger failed: " + e);
             }
         }
 

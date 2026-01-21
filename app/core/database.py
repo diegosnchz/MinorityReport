@@ -16,25 +16,30 @@ class Neo4jManager:
         self._driver = None
         self._uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         self._user = os.getenv("NEO4J_USER", "neo4j")
-        self._password = os.getenv("NEO4J_PASSWORD", "secret_password_123") # Default matching docker
+        self._password = os.getenv("NEO4J_PASSWORD", "secret_password_123") 
 
-    def connect(self):
+    async def connect(self):
         """Inicializa el driver asíncrono."""
         if self._driver is None:
             try:
+                # AsyncGraphDatabase.driver is a synchronous factory method that returns an AsyncDriver
                 self._driver = AsyncGraphDatabase.driver(
                     self._uri,
                     auth=(self._user, self._password)
                 )
                 logger.info(f"Conectado a Neo4j en {self._uri}")
+                # Verify connectivity
+                await self._driver.verify_connectivity()
             except Exception as e:
                 logger.error(f"Fallo al conectar con Neo4j: {e}")
+                self._driver = None
                 raise e
 
     async def close(self):
         """Cierra el pool de conexiones de manera limpia."""
         if self._driver:
             await self._driver.close()
+            self._driver = None
             logger.info("Conexión a Neo4j cerrada.")
 
     async def check_connection(self):
@@ -53,13 +58,18 @@ class Neo4jManager:
         Maneja la sesión automáticamente.
         """
         if self._driver is None:
+            logger.error("Attempted to query with uninitialized driver!")
             raise ConnectionError("El driver de Neo4j no está inicializado.")
         
-        async with self._driver.session() as session:
-            result = await session.run(cypher_query, parameters)
-            # Convertimos los registros a diccionarios nativos de Python
-            data = [record.data() for record in await result.values()]
-            return data
+        try:
+            async with self._driver.session() as session:
+                result = await session.run(cypher_query, parameters)
+                # Convertimos los registros a diccionarios nativos de Python
+                data = [record.data() async for record in result]
+                return data
+        except Exception as e:
+            logger.error(f"Query failed: {e}")
+            raise e
 
 # Instancia global para ser importada en el resto de la app
 db_manager = Neo4jManager()
