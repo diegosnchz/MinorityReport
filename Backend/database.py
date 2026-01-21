@@ -4,11 +4,22 @@ import os
 
 class Neo4jProvider:
     def __init__(self):
-        # En producción usar variables de entorno
-        uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        # 1. URI: Cambia 'bolt' por 'neo4j+s' y pon la dirección de tu nube
+        uri = os.getenv("NEO4J_URI", "neo4j+s://6ffb75ca.databases.neo4j.io")
+        
+        # 2. USER: Normalmente sigue siendo 'neo4j' en AuraDB
         user = os.getenv("NEO4J_USER", "neo4j")
-        password = os.getenv("NEO4J_PASSWORD", "secret_password")
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+        
+        # 3. PASSWORD: Pega aquí la contraseña larga que te dio AuraDB al crear la cuenta
+        password = os.getenv("NEO4J_PASSWORD", "eJcc40rfUud7IbOLvgX87dsRyT-uhV1FG81v6OnOL7s")
+        
+        try:
+            self.driver = GraphDatabase.driver(uri, auth=(user, password))
+            # Añadimos un verify para que sepas al instante si conecta
+            self.driver.verify_connectivity()
+            print("✅ Conectado a Neo4j AuraDB correctamente")
+        except Exception as e:
+            print(f"❌ Error conectando a Neo4j: {e}")
 
     def close(self):
         self.driver.close()
