@@ -1,0 +1,15 @@
+# Neo4j Data (DO NOT COMMIT)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+
+# IDEs
+.vscode/
+.idea/
