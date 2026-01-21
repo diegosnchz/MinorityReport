@@ -20,7 +20,6 @@ services:
       - neo4j_data:/data
       - neo4j_logs:/logs
       - neo4j_import:/var/lib/neo4j/import
-      - ./neo4j_integration.cypher:/var/lib/neo4j/import/init.cypher:ro
       - ./scripts/init-neo4j.sh:/docker-entrypoint-init.d/init-neo4j.sh:ro
     networks:
       - minority-report-network

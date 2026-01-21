@@ -66,15 +66,39 @@ class BenchmarkRunner:
             num_neighbors = min(3, len(potential))  # 3 vecinos por nodo
             node.neighbors = random.sample(potential, num_neighbors)
         
-        # Iniciar threads de gossip
+        # Flag para detener threads
+        stop_flag = {'stop': False}
+        
+        # Versión modificada del gossip loop con condición de parada
+        def gossip_loop_with_timeout(node, stop_flag, duration):
+            """Gossip loop que se detiene después de duration segundos."""
+            end_time = time.time() + duration
+            while time.time() < end_time and not stop_flag['stop']:
+                peer = node.select_peer()
+                if peer:
+                    digest = node.prepare_digest()
+                    if random.random() > 0.5:
+                        with node.lock:
+                            node.local_graph_view['version'] += 1
+                time.sleep(0.1)
+        
+        # Iniciar threads de gossip con timeout
         threads = []
         for node in nodes:
-            thread = threading.Thread(target=node.start_gossip_loop, daemon=True)
+            thread = threading.Thread(
+                target=gossip_loop_with_timeout, 
+                args=(node, stop_flag, duration),
+                daemon=True
+            )
             thread.start()
             threads.append(thread)
         
-        # Dejar correr por duration segundos
-        time.sleep(duration)
+        # Esperar a que terminen los threads
+        for thread in threads:
+            thread.join(timeout=duration + 1)
+        
+        # Asegurar que todos se detengan
+        stop_flag['stop'] = True
         
         # Recopilar métricas
         versions = [node.local_graph_view.get('version', 0) for node in nodes]
