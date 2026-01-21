@@ -241,16 +241,18 @@ class OracleNet(nn.Module):
         Returns:
             routes: Las K mejores rutas [k, max_route_length]
             safety_scores: Score de seguridad de cada ruta [k]
-        """
-        # Obtener scores de seguridad de todas las aristas
-        edge_safety_scores, _ = self.forward(x, edge_index)
         
+        Raises:
+            NotImplementedError: Este método aún no está implementado
+        """
         # TODO: Implementar algoritmo de pathfinding (e.g., A* modificado)
         # que use edge_safety_scores como pesos inversos
-        # Aquí se devolvería las K mejores rutas
-        
-        # Placeholder para demostración
-        return None, None
+        # Ver neo4j_oracle_integration.py para un ejemplo de implementación
+        # usando NetworkX
+        raise NotImplementedError(
+            "Pathfinding algorithm not yet implemented. "
+            "See neo4j_oracle_integration.py for an example using NetworkX."
+        )
 
 
 def create_oracle_net(

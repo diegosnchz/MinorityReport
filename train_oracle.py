@@ -185,16 +185,19 @@ def train_oracle_net(
     print(f"   Device: {device}")
     
     if device.type == 'cuda':
-        gpu_name = torch.cuda.get_device_name(0)
-        gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-        print(f"   GPU: {gpu_name}")
-        print(f"   Memory: {gpu_memory:.2f} GB")
-        
-        # Nota sobre NVIDIA Quadro K4200
-        if "K4200" in gpu_name or "Quadro" in gpu_name:
-            print(f"\n   ⚡ NVIDIA Quadro K4200 detectada!")
-            print(f"   Esta GPU es excelente para entrenar modelos GNN de tamaño medio.")
-            print(f"   Con 4GB VRAM, podemos procesar grafos de hasta ~200-300 nodos eficientemente.")
+        try:
+            gpu_name = torch.cuda.get_device_name(0)
+            gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
+            print(f"   GPU: {gpu_name}")
+            print(f"   Memory: {gpu_memory:.2f} GB")
+            
+            # Nota sobre NVIDIA Quadro K4200
+            if gpu_name and ("K4200" in gpu_name or "Quadro" in gpu_name):
+                print(f"\n   ⚡ NVIDIA Quadro K4200 detectada!")
+                print(f"   Esta GPU es excelente para entrenar modelos GNN de tamaño medio.")
+                print(f"   Con 4GB VRAM, podemos procesar grafos de hasta ~200-300 nodos eficientemente.")
+        except Exception as e:
+            print(f"   ⚠️  Could not get GPU details: {e}")
     else:
         print(f"   ⚠️  GPU no disponible. Entrenando en CPU.")
         print(f"   Para grafos grandes, recomendamos usar GPU.")

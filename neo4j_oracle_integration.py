@@ -222,13 +222,25 @@ class Neo4jOracleIntegration:
                 G.add_edge(src, dst, weight=weight, safety=safety)
             
             # 6. Encontrar ubicaciones de inicio y fin
-            # Por simplicidad, asumimos que start_location y end_location son IDs de Neo4j
-            # En un caso real, necesitarías una query para buscar por nombre
+            # TODO: Implementar búsqueda por nombre de ubicación en Neo4j
+            # Query ejemplo:
+            # MATCH (n:Location {name: $location_name}) RETURN id(n)
             
-            # TODO: Implementar búsqueda por nombre de ubicación
-            # Para este ejemplo, usamos nodos aleatorios
-            start_node = 0  # Placeholder
-            end_node = len(nodes) - 1  # Placeholder
+            # Por ahora, convertimos start_location y end_location a enteros
+            # si son IDs, o usamos nodos aleatorios como fallback
+            try:
+                start_node_id = int(start_location)
+                start_node = node_mapping.get(start_node_id, 0)
+            except (ValueError, KeyError):
+                start_node = 0  # Fallback a primer nodo
+                print(f"   ⚠️  Could not find start location '{start_location}', using node 0")
+            
+            try:
+                end_node_id = int(end_location)
+                end_node = node_mapping.get(end_node_id, len(nodes) - 1)
+            except (ValueError, KeyError):
+                end_node = len(nodes) - 1  # Fallback a último nodo
+                print(f"   ⚠️  Could not find end location '{end_location}', using node {end_node}")
             
             print(f"🎯 Finding routes from node {start_node} to {end_node}...")
             
