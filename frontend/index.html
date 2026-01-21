@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE GHOST | Evasion Protocol</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+</head>
+<body class="safe-state">
+    <div class="scanline"></div>
+    <div class="overlay"></div>
+
+    <main id="hud">
+        <header>
+            <div class="logo">
+                <span class="glitch" data-text="THE GHOST">THE GHOST</span>
+                <span class="sub-logo">EVASION PROTOCOL v1.0.4</span>
+            </div>
+            <div id="status-panel" class="panel">
+                <div class="label">SYSTEM STATUS</div>
+                <div id="current-status" class="status-value">SAFE</div>
+            </div>
+        </header>
+
+        <section id="viewport">
+            <div id="cy"></div>
+            <div class="coordinates">
+                LAT: 40.4168° N | LON: 3.7038° W
+            </div>
+        </section>
+
+        <footer>
+            <div id="data-feed" class="panel">
+                <div class="label">LIVE DATA FEED</div>
+                <div class="feed-content">
+                    > CONNECTING TO NEO4J... DONE<br>
+                    > GAT MODEL LOADED... READY<br>
+                    > SCANNING FOR PATROLS... CLEAR
+                </div>
+            </div>
+            <div class="controls">
+                <button id="panic-btn" class="panic-btn">
+                    <span class="btn-text">PANIC</span>
+                    <span class="btn-sub">SEND ALERT</span>
+                </button>
+            </div>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
