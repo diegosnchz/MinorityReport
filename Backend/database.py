@@ -5,7 +5,7 @@ import os
 class Neo4jProvider:
     def __init__(self):
         # 1. URI: Cambia 'bolt' por 'neo4j+s' y pon la dirección de tu nube
-        uri = os.getenv("NEO4J_URI", "neo4j+s://6ffb75ca.databases.neo4j.io")
+        uri = os.getenv("NEO4J_URI", "neo4j+ssc://6ffb75ca.databases.neo4j.io")
         
         # 2. USER: Normalmente sigue siendo 'neo4j' en AuraDB
         user = os.getenv("NEO4J_USER", "neo4j")
