@@ -1,15 +1,23 @@
 # main.py
-from fastapi import FastAPI, BackgroundTasks
-from models import Alerta, RutaEscape
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from models import Alerta
 from executor import executor
+from sockets import manager  # Importamos el manager desde sockets.py
 import asyncio
 
 app = FastAPI(title="The Evasion Protocol - Hive Core")
 
 @app.on_event("startup")
 async def startup_event():
-    # Arrancamos el Executor en el background al iniciar la API
+    """Arranca el worker cuando enciendes el servidor"""
     asyncio.create_task(executor.run_worker())
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """🛑 APAGADO CONTROLADO: Se ejecuta al pulsar Ctrl+C"""
+    print("\n🚨 Apagando sistema... Esperando a que el Executor termine...")
+    await executor.stop_worker()
+    print("✅ Sistema apagado correctamente. ¡Hasta luego, Operador!")
 
 @app.get("/")
 def read_root():
@@ -17,15 +25,23 @@ def read_root():
 
 @app.post("/alert")
 async def report_danger(alerta: Alerta):
-    """
-    Endpoint para que el 'Fantasma' (Cliente) envíe pánico.
-    Member A: Recibe la petición HTTP.
-    Member B: La lógica se delega al Executor.
-    """
-    # No bloqueamos esperando respuesta, lo metemos a la cola
+    """Endpoint para recibir alertas de los ladrones"""
     await executor.add_alert(alerta)
-    return {"status": "received", "message": "Calculando evasión..."}
+    return {"status": "received", "message": "Procesando evasión..."}
 
 @app.get("/status")
 def get_queue_status():
-    return {"tareas_pendientes": executor.queue.qsize()}
+    return {
+        "estado_worker": "Activo" if executor.is_running else "Apagándose",
+        "tareas_pendientes": executor.queue.qsize()
+    }
+
+# Endpoint WebSocket
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket, client_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
