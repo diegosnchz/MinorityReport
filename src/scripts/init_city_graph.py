@@ -26,11 +26,11 @@ def generate_city_grid(rows: int = 5, cols: int = 5):
         
         # 2. Create Nodes
         query_create_node = f"""
-        CREATE (n:{NodeLabel.LOCATION} {{
-            {NodeProperty.ID}: $uid,
-            {NodeProperty.X}: $x,
-            {NodeProperty.Y}: $y,
-            {NodeProperty.NAME}: $name
+        CREATE (n:{NodeLabel.LOCATION.value} {{
+            {NodeProperty.ID.value}: $uid,
+            {NodeProperty.X.value}: $x,
+            {NodeProperty.Y.value}: $y,
+            {NodeProperty.NAME.value}: $name
         }})
         """
         
@@ -57,11 +57,11 @@ def generate_city_grid(rows: int = 5, cols: int = 5):
 
         # 3. Create Relationships (Grid Edges)
         query_create_edge = f"""
-        MATCH (a:{NodeLabel.LOCATION} {{ {NodeProperty.ID}: $id_a }})
-        MATCH (b:{NodeLabel.LOCATION} {{ {NodeProperty.ID}: $id_b }})
-        CREATE (a)-[:{RelationshipType.CONNECTED_TO} {{
-            {EdgeProperty.DISTANCE}: 1,
-            {EdgeProperty.RISK_LEVEL}: $risk
+        MATCH (a:{NodeLabel.LOCATION.value} {{ {NodeProperty.ID.value}: $id_a }})
+        MATCH (b:{NodeLabel.LOCATION.value} {{ {NodeProperty.ID.value}: $id_b }})
+        CREATE (a)-[:{RelationshipType.CONNECTED_TO.value} {{
+            {EdgeProperty.DISTANCE.value}: 1,
+            {EdgeProperty.RISK_LEVEL.value}: $risk
         }}]->(b)
         """
         
@@ -93,10 +93,10 @@ def generate_city_grid(rows: int = 5, cols: int = 5):
         # 4. Create Special Nodes (Hideouts)
         # Convert some existing random nodes to Hideouts or create new ones linked
         hideout_query = f"""
-        MATCH (n:{NodeLabel.LOCATION}) 
+        MATCH (n:{NodeLabel.LOCATION.value}) 
         WITH n ORDER BY rand() LIMIT 2
-        SET n:{NodeLabel.HIDEOUT}
-        RETURN n.{NodeProperty.NAME} as name
+        SET n:{NodeLabel.HIDEOUT.value}
+        RETURN n.{NodeProperty.NAME.value} as name
         """
         hideouts = db.execute_query(hideout_query)
         logger.info(f"🕵️ Designated Hideouts: {[h['name'] for h in hideouts]}")

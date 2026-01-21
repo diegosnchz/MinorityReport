@@ -15,7 +15,7 @@ def get_neighborhood(node_id: str, hops: int = 2) -> List[Dict[str, Any]]:
         List of paths or subgraph data.
     """
     query = f"""
-    MATCH path = (start:{NodeLabel.LOCATION} {{ {NodeProperty.ID}: $node_id }})-[*1..{hops}]-(neighbor)
+    MATCH path = (start:{NodeLabel.LOCATION.value} {{ {NodeProperty.ID.value}: $node_id }})-[*1..{hops}]-(neighbor)
     RETURN path
     """
     params = {"node_id": node_id}
@@ -36,9 +36,9 @@ def find_safe_path(start_id: str, end_id: str) -> List[Dict[str, Any]]:
     # Using APOC for weighted shortest path if available is best.
     # Here we use a standard approach finding multiple paths and sorting by total risk.
     query = f"""
-    MATCH p = (start:{NodeLabel.LOCATION} {{ {NodeProperty.ID}: $start_id }})-[:{RelationshipType.CONNECTED_TO}*..10]-(end:{NodeLabel.LOCATION} {{ {NodeProperty.ID}: $end_id }})
+    MATCH p = (start:{NodeLabel.LOCATION.value} {{ {NodeProperty.ID.value}: $start_id }})-[:{RelationshipType.CONNECTED_TO.value}*..10]-(end:{NodeLabel.LOCATION.value} {{ {NodeProperty.ID.value}: $end_id }})
     WITH p, 
-         reduce(risk = 0.0, r IN relationships(p) | risk + COALESCE(r.{EdgeProperty.RISK_LEVEL}, 0)) AS total_risk
+         reduce(risk = 0.0, r IN relationships(p) | risk + COALESCE(r.{EdgeProperty.RISK_LEVEL.value}, 0)) AS total_risk
     ORDER BY total_risk ASC
     LIMIT 1
     RETURN p, total_risk
