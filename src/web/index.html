@@ -40,12 +40,12 @@
     <div class="max-w-7xl mx-auto">
         <header class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-indigo-400">👻 THE GHOST CLIENT</h1>
+                <h1 class="text-3xl font-bold text-indigo-400">THE GHOST CLIENT</h1>
                 <p class="text-sm text-slate-400">Minority Report Evasion Interface</p>
             </div>
             <div class="flex gap-4">
-                <button onclick="loadGraph()" class="btn btn-primary">🔄 Sync Map</button>
-                <button onclick="predictEscape()" class="btn btn-danger">⚡ AI PREDICT (GAT)</button>
+                <button onclick="loadGraph()" class="btn btn-primary">Sync Map</button>
+                <button onclick="predictEscape()" class="btn btn-danger">AI PREDICT (GAT)</button>
             </div>
         </header>
 
@@ -102,7 +102,7 @@
 
                 const nodes = new vis.DataSet(data.nodes.map(n => ({
                     id: n.id,
-                    label: n.is_hideout ? "🏠 Hideout" : "📍 Street",
+                    label: n.is_hideout ? "[H] Hideout" : "[S] Street",
                     color: n.is_hideout ? "#10b981" : "#6366f1", // Green for hideout, Indigo for street
                     title: `Coords: (${n.x}, ${n.y})`
                 })));
@@ -110,7 +110,7 @@
                 const edges = new vis.DataSet(data.edges.map(e => ({
                     from: e.from,
                     to: e.to,
-                    label: e.risk > 0.5 ? "⚠️ High Risk" : "",
+                    label: e.risk > 0.5 ? "[!] High Risk" : "",
                     color: e.risk > 0.5 ? "#ef4444" : "#64748b",
                     width: e.risk > 0.5 ? 4 : 1
                 })));
@@ -127,7 +127,7 @@
         }
 
         async function predictEscape() {
-            document.getElementById('status-text').innerText = "🔮 Running GAT Inference...";
+            document.getElementById('status-text').innerText = "Running GAT Inference...";
             try {
                 const response = await fetch('http://localhost:8000/predict', {
                     method: 'POST',

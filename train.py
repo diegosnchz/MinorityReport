@@ -27,7 +27,7 @@ def train_precrime_gan(data, epochs=50):
     optimizer_G = torch.optim.Adam(generator.parameters(), lr=0.01)
     optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=0.01)
 
-    logger.info("🥊 Starting Adversarial Training...")
+    logger.info("Starting Adversarial Training...")
 
     # Simulation Loop
     for epoch in range(epochs):
@@ -79,11 +79,11 @@ if __name__ == "__main__":
     
     data = Data(x=x, edge_index=edge_index)
     
-    logger.info("🔮 Initializing Pre-Crime System...")
+    logger.info("Initializing Pre-Crime System...")
     gen, disc = train_precrime_gan(data)
     
     # 2. Simulate export to Neo4j (Requires active database)
     # fake_predictions = [{'source': 1, 'target': 5, 'risk': 0.98}] 
     # db.update_predictions(fake_predictions)
     
-    logger.info("✅ Training finished. Precogs ready.")
+    logger.info("Training finished. Precogs ready.")

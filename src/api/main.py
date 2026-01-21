@@ -34,14 +34,14 @@ class PredictionRequest(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     """Load AI models on startup."""
-    logger.info("🚀 Starting Evasion Protocol API...")
+    logger.info("Starting Evasion Protocol API...")
     # Initialize simplified models matching our feature dimensions
     # Input Dim = 3 (X, Y, IsHideout)
     ai_models['generator'] = Generator(in_channels=3, out_channels=3)
     ai_models['discriminator'] = Discriminator(in_channels=3)
     
     # In a real scenario, we would load state_dict here
-    logger.info("🤖 AI Models Initialized.")
+    logger.info("AI Models Initialized.")
 
 @app.get("/health")
 def health_check():

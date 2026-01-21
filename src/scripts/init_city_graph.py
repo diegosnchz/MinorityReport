@@ -27,13 +27,13 @@ class PreCrimeCityGenerator:
 
     def clear_database(self):
         """Limpia la base de datos para empezar de cero."""
-        logger.info("🧹 Limpiando la ciudad (Base de datos)...")
+        logger.info("Limpiando la ciudad (Base de datos)...")
         with self.driver.session() as session:
             session.run("MATCH (n) DETACH DELETE n")
 
     def create_constraints(self):
         """Crea índices para que la inserción sea rápida."""
-        logger.info("🛡️ Estableciendo leyes físicas (Indices)...")
+        logger.info("Estableciendo leyes físicas (Indices)...")
         queries = [
             "CREATE CONSTRAINT citizen_id IF NOT EXISTS FOR (c:Citizen) REQUIRE c.id IS UNIQUE",
             "CREATE CONSTRAINT location_id IF NOT EXISTS FOR (l:Location) REQUIRE l.id IS UNIQUE",
@@ -76,7 +76,7 @@ class PreCrimeCityGenerator:
         Genera ciudadanos con una 'Semilla de Riesgo'.
         Esta semilla es la variable latente que la IA intentará descubrir.
         """
-        logger.info(f"👥 Poblando la ciudad con {NUM_CITIZENS} ciudadanos...")
+        logger.info(f"Poblando la ciudad con {NUM_CITIZENS} ciudadanos...")
         citizens = []
         for i in range(NUM_CITIZENS):
             # Distribución Beta: La mayoría es buena gente (riesgo bajo), pocos son muy peligrosos
@@ -103,7 +103,7 @@ class PreCrimeCityGenerator:
         Crea la red social (:KNOWS).
         Usa lógica de 'Homofilia': Criminales conocen criminales.
         """
-        logger.info("🕸️ Tejiendo la red social...")
+        logger.info("Tejiendo la red social...")
         
         # Recuperamos los IDs y sus riesgos para calcular lógica en Python
         with self.driver.session() as session:
@@ -147,7 +147,7 @@ class PreCrimeCityGenerator:
         Genera el 'Ground Truth' (:COMMITTED_CRIME).
         Solo ciudadanos con alto risk_seed cometen crímenes.
         """
-        logger.info("🚨 Generando historial criminal...")
+        logger.info("Generando historial criminal...")
         crimes = []
         
         # Recuperar ciudadanos de alto riesgo y ubicaciones
@@ -157,7 +157,7 @@ class PreCrimeCityGenerator:
             locations = session.run("MATCH (l:Location) RETURN l.id as id, l.type as type").data()
 
         if not high_risk_citizens:
-            logger.info("⚠️ No hay ciudadanos de alto riesgo generados.")
+            logger.info("No hay ciudadanos de alto riesgo generados.")
             return
 
         for criminal_id in high_risk_citizens:
@@ -208,10 +208,10 @@ if __name__ == "__main__":
         generator.generate_social_graph()
         generator.generate_crimes()
         
-        print("\n✅ CIUDAD GENERADA EXITOSAMENTE.")
+        print("\nCIUDAD GENERADA EXITOSAMENTE.")
         print("Ahora tienes datos para entrenar a tus Precogs.")
         
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
     finally:
         generator.close()

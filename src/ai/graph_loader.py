@@ -21,7 +21,7 @@ def calculate_criminal_influence(driver: Driver):
     Step 1: Metric Calculation (In-Graph).
     Updates Citizen nodes with 'criminal_degree'.
     """
-    logger.info("💧 Hydrating: Calculating criminal influence from environment...")
+    logger.info("Hydrating: Calculating criminal influence from environment...")
     query = """
     MATCH (c:Citizen)
     OPTIONAL MATCH (c)-[:KNOWS]-(friend)-[:COMMITTED_CRIME]->()
@@ -33,7 +33,7 @@ def calculate_criminal_influence(driver: Driver):
         with driver.session() as session:
             result = session.run(query)
             count = result.single()["count"]
-            logger.info(f"✅ {count} nodes updated with 'criminal_degree'.")
+            logger.info(f"{count} nodes updated with 'criminal_degree'.")
     except Exception as e:
         logger.error(f"Failed to calculate criminal influence: {e}")
         raise
@@ -43,7 +43,7 @@ def extract_features_to_pandas(driver: Driver) -> Tuple[pd.DataFrame, pd.DataFra
     Step 2: Vectorization (Python/Pandas).
     Extracts raw data and performs One-Hot Encoding and Normalization.
     """
-    logger.info("📊 Extracting data for vectorization...")
+    logger.info("Extracting data for vectorization...")
     query = """
     MATCH (c:Citizen)
     RETURN c.id as id, c.born as born, c.job as job, c.criminal_degree as crim_deg, 
@@ -80,7 +80,7 @@ def extract_features_to_pandas(driver: Driver) -> Tuple[pd.DataFrame, pd.DataFra
     drop_cols = ['born', 'job', 'target', 'id']
     features = df_processed.drop(columns=drop_cols)
     
-    logger.info(f"✅ Features processed. Tensor dimensions: {features.shape}")
+    logger.info(f"Features processed. Tensor dimensions: {features.shape}")
     return df, features
 
 def load_graph_to_pyg(driver: Driver, features_df: pd.DataFrame, full_df: pd.DataFrame) -> Data:
@@ -88,7 +88,7 @@ def load_graph_to_pyg(driver: Driver, features_df: pd.DataFrame, full_df: pd.Dat
     Step 3: PyTorch Geometric Assembly.
     Constructs the Data object.
     """
-    logger.info("🚀 Building PyTorch Geometric object...")
+    logger.info("Building PyTorch Geometric object...")
     
     if features_df.empty:
         raise ValueError("Features DataFrame is empty. Cannot build graph.")
@@ -131,7 +131,7 @@ def load_graph_to_pyg(driver: Driver, features_df: pd.DataFrame, full_df: pd.Dat
     # 4. Assembly
     data = Data(x=x, edge_index=edge_index, y=y)
     
-    logger.info(f"✨ Graph loaded into memory:")
+    logger.info(f"Graph loaded into memory:")
     logger.info(f" - Nodes: {data.num_nodes}")
     logger.info(f" - Edges: {data.num_edges}")
     logger.info(f" - Features per node: {data.num_node_features}")

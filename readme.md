@@ -1,11 +1,11 @@
-# 🕵️ Project: The Evasion Protocol (Minority Report - Robbers Side)
+# Project: The Evasion Protocol (Minority Report - Robbers Side)
 
 > **Premisa:** En un mundo donde la policía predice el crimen, nosotros somos la anomalía.
 > **Objetivo:** Crear un sistema descentralizado que utilice **IA de Grafos (GAT/GCN)** para calcular rutas de escape dinámicas e invisibles a la predicción policial estándar.
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El sistema sigue un modelo **Cliente-Servidor con Persistencia en Grafos**, dividido en dos capas principales:
 
@@ -20,7 +20,7 @@ El sistema sigue un modelo **Cliente-Servidor con Persistencia en Grafos**, divi
 
 ---
 
-## 👥 Distribución de Roles y Ramas de Git
+## Distribución de Roles y Ramas de Git
 
 Somos 5 integrantes divididos en 4 ramas funcionales. El Backend (Core) soporta la carga de trabajo de dos personas.
 
@@ -69,7 +69,7 @@ Somos 5 integrantes divididos en 4 ramas funcionales. El Backend (Core) soporta 
 
 ---
 
-## ⚙️ Flujo Técnico del "Juego"
+## Flujo Técnico del "Juego"
 
 ### Escenario: Evasión en Tiempo Real
 
@@ -87,7 +87,7 @@ Somos 5 integrantes divididos en 4 ramas funcionales. El Backend (Core) soporta 
 
 ---
 
-## 🚀 Getting Started (Comandos Rápidos)
+## Getting Started (Comandos Rápidos)
 
 ### 1. Levantar Infraestructura (Neo4j)
 ```bash
