@@ -19,8 +19,7 @@ import torch.optim as optim
 from torch_geometric.data import Data
 from torch_geometric.loader import NeighborLoader
 from graphsage_model import create_graphsage_model, GraphSAGEMiniBatch, GraphSAGEWithClustering
-from typing import Optional, Literal
-import numpy as np
+from typing import Optional, Literal, Tuple
 import time
 
 
@@ -158,9 +157,8 @@ def train_with_clustering(
     # Node-level loss (edge prediction)
     src_embeddings = node_embeddings[data.edge_index[0]]
     dst_embeddings = node_embeddings[data.edge_index[1]]
-    edge_features = torch.cat([src_embeddings, dst_embeddings], dim=1)
     
-    # Simple edge predictor
+    # Simple edge predictor using dot product
     edge_scores = torch.sigmoid(
         (src_embeddings * dst_embeddings).sum(dim=1, keepdim=True)
     )
@@ -197,7 +195,7 @@ def evaluate_minibatch(
     model: GraphSAGEMiniBatch,
     loader: NeighborLoader,
     device: torch.device
-) -> tuple[float, float]:
+) -> Tuple[float, float]:
     """
     Evaluate model on validation set.
     
