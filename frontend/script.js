@@ -1,12 +1,92 @@
 // ============================================================================
-// THE GHOST - Core Script
+// HIVE CORE CLIENT - FastAPI Integration
 // ============================================================================
-// Este script visualiza un grafo 3D donde un agente (ladrón) se mueve entre
-// ubicaciones de la ciudad, evitando patrullas policiales. Usa el algoritmo
-// de Dijkstra para calcular rutas de escape seguras hacia un hideout único.
+// Esta clase maneja la comunicación con el backend FastAPI ("The Hive Core").
+// Se encarga de enviar alertas de pánico y monitorear el estado del sistema.
+
+class HiveCoreClient {
+    constructor(port = 8000) {
+        this.baseUrl = `http://localhost:${port}`;
+        this.wsUrl = `ws://localhost:${port}/ws/ghost_${Math.floor(Math.random() * 1000)}`;
+        this.ws = null;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+    }
+
+    // Inicializar conexión WebSocket
+    connectWebSocket() {
+        console.log(`HIVE_CORE: Conectando a túnel WebSocket...`);
+        this.ws = new WebSocket(this.wsUrl);
+
+        this.ws.onopen = () => {
+            console.log("HIVE_CORE: WebSocket Conectado ✅");
+            this.reconnectAttempts = 0;
+        };
+
+        this.ws.onmessage = (event) => {
+            console.log("HIVE_CORE: Mensaje recibido:", event.data);
+        };
+
+        this.ws.onclose = () => {
+            console.warn("HIVE_CORE: WebSocket Desconectado 🛑");
+            this.attemptReconnect();
+        };
+
+        this.ws.onerror = (err) => {
+            console.error("HIVE_CORE: Error en WebSocket:", err);
+        };
+    }
+
+    attemptReconnect() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            const delay = Math.pow(2, this.reconnectAttempts) * 1000;
+            console.log(`HIVE_CORE: Reintentando conexión en ${delay / 1000}s...`);
+            setTimeout(() => this.connectWebSocket(), delay);
+        }
+    }
+
+    // Reportar peligro al endpoint /alert
+    async reportAlert(nodeId, type, message = "Pánico detectado") {
+        console.log(`HIVE_CORE: Reportando alerta desde ${nodeId}...`);
+        try {
+            const response = await fetch(`${this.baseUrl}/alert`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_nodo: nodeId,
+                    tipo: type,
+                    mensaje: message,
+                    timestamp: new Date().toISOString()
+                })
+            });
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.warn("HIVE_CORE: Error al reportar alerta:", error.message);
+            return { status: "offline", message: "Servidor no alcanzable" };
+        }
+    }
+
+    // Obtener estado completo del backend
+    async getQueueStatus() {
+        try {
+            const response = await fetch(`${this.baseUrl}/status`);
+            return await response.json();
+        } catch (error) {
+            return null;
+        }
+    }
+}
+
+// ============================================================================
+// THE GHOST - Core Script
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    const hiveClient = new HiveCoreClient();
+    hiveClient.connectWebSocket();
 
     // ========================================================================
     // 1. DATOS DEL GRAFO 3D
@@ -244,8 +324,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lines.length > 15) feed.innerHTML = lines.slice(0, 15).join('<br>');
     }
 
-    function runPanicSequence() {
+    async function runPanicSequence() {
         logMessage('🚨 PANIC ACTIVATED: CALCULATING SAFEST ROUTE...');
+
+        // Notificar al backend FastAPI
+        const response = await hiveClient.reportAlert(currentNodeId, "PANIC", "Evasion protocol triggered by user");
+        if (response.status === "received") {
+            logMessage(`📡 BACKEND: ${response.message.toUpperCase()}`);
+        } else if (response.status === "offline") {
+            logMessage('📡 BACKEND: OFFLINE (Running local evasion)');
+        }
+
         panicRoute = findSafestPath(currentNodeId, 'hideout');
         if (panicRoute.length > 1) {
             logMessage(`🛣️ ROUTE FOUND: ${panicRoute.length - 1} HOPS TO SAFETY`);
@@ -258,6 +347,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     panicBtn.addEventListener('click', runPanicSequence);
+
+    // Monitoreo de estado del backend (Polling cada 10s)
+    async function pollBackendStatus() {
+        const status = await hiveClient.getQueueStatus();
+        if (status) {
+            console.log(`HIVE_CORE: Worker [${status.estado_worker}] | Tareas: ${status.tareas_pendientes}`);
+        }
+    }
+    setInterval(pollBackendStatus, 10000);
 
     // Inicio
     logMessage('GHOST CLIENT 3D INITIALIZED. STANDING BY.');
