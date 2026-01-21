@@ -130,7 +130,7 @@
                     const div = document.createElement('div');
                     div.className = 'vision-card high-risk';
                     div.innerHTML = `
-                        <div style="font-weight: bold; color: #ff5555;">⚠ ${v.perpetrator.name}</div>
+                        <div style="font-weight: bold; color: #ff5555;">Warning: ${v.perpetrator.name}</div>
                         <div style="font-size: 0.9em;">Target: ${v.target.name}</div>
                         <div style="font-size: 0.8em; margin-top: 5px;">
                             <span class="badge">Prob: ${(v.probability * 100).toFixed(1)}%</span>

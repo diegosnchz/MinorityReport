@@ -26,16 +26,16 @@ class Neo4jManager:
                     self._uri,
                     auth=(self._user, self._password)
                 )
-                logger.info(f"🔌 Conectado a Neo4j en {self._uri}")
+                logger.info(f"Conectado a Neo4j en {self._uri}")
             except Exception as e:
-                logger.error(f"❌ Fallo al conectar con Neo4j: {e}")
+                logger.error(f"Fallo al conectar con Neo4j: {e}")
                 raise e
 
     async def close(self):
         """Cierra el pool de conexiones de manera limpia."""
         if self._driver:
             await self._driver.close()
-            logger.info("🔌 Conexión a Neo4j cerrada.")
+            logger.info("Conexión a Neo4j cerrada.")
 
     async def check_connection(self):
         """Verifica que la base de datos responde (Health check)."""

@@ -1,4 +1,4 @@
-# 🔮 Project Pre-Crime: Predictive Justice System
+# Project Pre-Crime: Predictive Justice System
 
 ![Python](https://img.shields.io/badge/Python-3.9-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green)
@@ -9,7 +9,7 @@
 
 **Project Pre-Crime** es una prueba de concepto (PoC) de un sistema de vigilancia predictiva inspirado en *Minority Report*. Utiliza una arquitectura moderna de **Graph Machine Learning** para analizar patrones en una ciudad sintética y predecir crímenes antes de que ocurran.
 
-## 🏗 Arquitectura
+## Arquitectura
 
 El sistema se aleja de las arquitecturas monolíticas tradicionales (Java/Spring) para abrazar un stack nativo de IA:
 
@@ -18,7 +18,7 @@ El sistema se aleja de las arquitecturas monolíticas tradicionales (Java/Spring
 3.  **Sistema Nervioso (API):** **FastAPI** (Python) orquesta la inferencia en tiempo real, conectando la base de datos con los tensores neuronales.
 4.  **Interfaz (Dashboard):** Visualización 3D interactiva usando WebGL (`3d-force-graph`).
 
-## 🚀 Instalación y Despliegue
+## Instalacion y Despliegue
 
 La forma más sencilla de ejecutar la simulación completa es usando Docker.
 
@@ -41,7 +41,7 @@ La forma más sencilla de ejecutar la simulación completa es usando Docker.
 3.  Acceder al Dashboard:
     Abre tu navegador en `http://localhost:8000`.
 
-## 🕹 Uso de la Simulación
+## Uso de la Simulacion
 
 1.  **Generación de Mundo:** Al iniciar, el sistema estará vacío. Usa el endpoint `/simulation/generate` (o el script de inicialización) para crear la ciudad sintética.
 2.  **Dashboard:** En la pantalla principal verás el grafo 3D.
@@ -50,7 +50,7 @@ La forma más sencilla de ejecutar la simulación completa es usando Docker.
     *   La red neuronal calculará riesgos.
     *   Si se detecta una anomalía (>85%), aparecerá una "Bola Roja" (Nodo de Visión) en el grafo.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 *   **Lenguaje:** Python 3.9
 *   **Web Framework:** FastAPI + Uvicorn
@@ -59,7 +59,7 @@ La forma más sencilla de ejecutar la simulación completa es usando Docker.
 *   **Data Validation:** Pydantic v2
 *   **Frontend:** HTML5, 3d-force-graph.js
 
-## 📄 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 /app
@@ -71,6 +71,6 @@ La forma más sencilla de ejecutar la simulación completa es usando Docker.
 └── static/       # Dashboard HTML/JS
 ```
 
-## ⚖️ Nota Ética
+## Nota Etica
 
 Este proyecto es una exploración técnica de las capacidades de las GNNs (Graph Neural Networks). No debe utilizarse como base para sistemas de vigilancia reales sin capas profundas de auditoría ética, explicabilidad (XAI) y supervisión humana, debido a los riesgos inherentes de sesgo algorítmico en datos policiales.

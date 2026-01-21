@@ -13,7 +13,7 @@ class PrecogSystem:
         
     def load_models(self):
         """Initializes the AI models (GAT)."""
-        logger.info("🧠 Loading Precog Neural Networks...")
+        logger.info("Loading Precog Neural Networks...")
         # In a real scenario, we would load state_dict here:
         # self.model.load_state_dict(torch.load("precogs.pt"))
         
@@ -27,7 +27,7 @@ class PrecogSystem:
         
         self.model = PoliceDiscriminator(input_dim, hidden_dim, out_dim).to(self.device)
         self.model.eval() # Set to inference mode
-        logger.info("🧠 Precogs are AWAKE and ready.")
+        logger.info("Precogs are AWAKE and ready.")
 
     def predict(self, features: CitizenFeatureVector) -> dict:
         """
@@ -67,7 +67,7 @@ class PrecogSystem:
         
         adjusted_prob = (prob * 0.2) + (features.risk_seed * 0.8)
         
-        logger.info(f"🔮 Precog Scan {features.id}: Risk {features.risk_seed} -> Prob {adjusted_prob:.2f}")
+        logger.info(f"Precog Scan {features.id}: Risk {features.risk_seed} -> Prob {adjusted_prob:.2f}")
         
         return {"probability": float(adjusted_prob)}
 

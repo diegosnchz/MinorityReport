@@ -7,12 +7,12 @@ from app.routers import predictions, citizens, locations, crimes, visions, simul
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Conectar DB y Cargar Red Neuronal
-    print("🔮 Iniciando Sistema Pre-Crime...")
+    print("Iniciando Sistema Pre-Crime...")
     precog_system.load_models()
     db_manager.connect()
     yield
     # Shutdown
-    print("🛑 Apagando sistema...")
+    print("Apagando sistema...")
     await db_manager.close()
 
 app = FastAPI(title="Pre-Crime Department API", lifespan=lifespan)

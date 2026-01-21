@@ -13,14 +13,14 @@ class SimulationService:
     """
     async def run_step(self):
         """Ejecuta un 'tick' de la simulación."""
-        print("🔄 Simulando actividad en la ciudad...")
+        print("Simulando actividad en la ciudad...")
         
         # 1. Obtener actores aleatorios (Muestreo)
         citizens = await citizen_repo.find_all(limit=50)
         locations = await location_repo.find_all(limit=20)
         
         if not citizens or not locations:
-            print("⚠️ Faltan datos para simular.")
+            print("Faltan datos para simular.")
             return
 
         # 2. Lógica de "Pre-Crimen"
@@ -34,7 +34,7 @@ class SimulationService:
         
         # 3. Si el riesgo es alto, creamos la conexión en el Grafo
         if probability > 0.75:
-            print(f"🚨 BOLA ROJA GENERADA: {suspect['name']} en {target['name']}")
+            print(f"BOLA ROJA GENERADA: {suspect['name']} en {target['name']}")
             vision_data = VisionCreate(
                 citizen_id=suspect['id'],
                 location_id=target['id'],
