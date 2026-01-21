@@ -33,7 +33,7 @@ class SimulationService:
         probability = self._calculate_mock_probability(suspect, target)
         
         # 3. Si el riesgo es alto, creamos la conexión en el Grafo
-        if probability > 0.75:
+        if probability > 0.2:
             print(f"BOLA ROJA GENERADA: {suspect['name']} en {target['name']}")
             vision_data = VisionCreate(
                 citizen_id=suspect['id'],

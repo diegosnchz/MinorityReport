@@ -1,5 +1,5 @@
 # Neo4j Data (DO NOT COMMIT)
-data/
+neo4j_data/
 
 # Python
 __pycache__/
