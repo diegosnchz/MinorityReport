@@ -3,7 +3,8 @@ from typing import List
 from app.models.schemas_vision import VisionCreate, VisionRead
 from app.repositories.vision_repo import vision_repo
 from app.services.xai_service import xai_service
-from app.repositories.citizen_repo import citizen_repo # Necesario para obtener subgrafofrom app.services.vision_service import vision_service
+from app.repositories.citizen_repo import citizen_repo # Necesario para obtener subgrafo
+from app.services.vision_service import vision_service
 
 router = APIRouter(prefix="/visions", tags=["Pre-Crime Visions"])
 

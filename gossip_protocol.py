@@ -47,9 +47,9 @@ class EdgeNode:
                 if random.random() > 0.5:
                      with self.lock:
                          self.local_graph_view['version'] += 1
-                         print(f"   ↳ [Node {self.node_id}] Synced with {peer.node_id}. New Version: {self.local_graph_view['version']}")
+                         print(f"             [Node {self.node_id}] Synced with {peer.node_id}. New Version: {self.local_graph_view['version']}")
                 else:
-                     print(f"   ↳ [Node {self.node_id}] - No updates needed.")
+                     print(f"             [Node {self.node_id}] - No updates needed.")
             
             # 3. Wait (e.g., 100ms)
             time.sleep(0.1)

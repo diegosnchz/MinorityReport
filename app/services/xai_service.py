@@ -71,12 +71,18 @@ class XAIService:
     def _format_explanation(self, explanation, data):
         # Lógica para convertir tensores a JSON legible para el humano
         critical_connections = []
-        mask = explanation.edge_mask.cpu().detach().numpy()
-        edges = data.edge_index.cpu().detach().numpy()
+        # Use .tolist() to avoid Numpy dependency issues in some docker envs
+        mask = explanation.edge_mask.cpu().detach().tolist()
+        edges = data.edge_index.cpu().detach().tolist() # Returns list of lists [[srcs], [dsts]]
+        
+        # edges[0] are sources, edges[1] are targets
+        src_nodes = edges[0]
+        dst_nodes = edges[1]
         
         for i, importance in enumerate(mask):
             if importance > 0.6: # Umbral de relevancia
-                src, dst = edges[:, i]
+                src = src_nodes[i]
+                dst = dst_nodes[i]
                 critical_connections.append({
                     "source": int(src),
                     "target": int(dst),

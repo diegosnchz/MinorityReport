@@ -6,10 +6,14 @@ from neo4j import GraphDatabase
 from faker import Faker
 from tqdm import tqdm  # Progress bar
 
+import os
+
 # --- CONFIGURACIÓN ---
 # These are loaded from environment in a real app, but hardcoded here as per script provided
-URI = "bolt://localhost:7687"
-AUTH = ("neo4j", "secret_password_123")  # Updated to match our docker-compose config
+URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+user = os.getenv("NEO4J_USER", "neo4j")
+password = os.getenv("NEO4J_PASSWORD", "secret_password_123")
+AUTH = (user, password)
 NUM_CITIZENS = 1000
 NUM_LOCATIONS = 50
 CRIME_RATE = 0.05  # 5% de la población son criminales activos

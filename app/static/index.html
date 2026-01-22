@@ -109,6 +109,9 @@
     </div>
 
     <script>
+        // State for XAI highlights
+        let highlightedEdges = new Set();
+
         // 1. Configuración del Grafo 3D
         const Graph = ForceGraph3D()
             (document.getElementById('graph-container'))
@@ -118,6 +121,17 @@
             .nodeVal('val') // Tamaño del nodo basado en riesgo
             .linkDirectionalParticles(2) // Partículas fluyendo en las conexiones
             .linkDirectionalParticleSpeed(d => 0.005) // Fixed speed for visibility
+            .linkColor(link => {
+                // XAI: Highlight critical edges
+                const id = `${link.source.id || link.source}-${link.target.id || link.target}`;
+                if (highlightedEdges.has(id)) return '#ff00ff'; // Magenta for explanation
+                return '#ffffff';
+            })
+            .linkWidth(link => {
+                const id = `${link.source.id || link.source}-${link.target.id || link.target}`;
+                if (highlightedEdges.has(id)) return 3; // Thicker line
+                return 1;
+            })
             .onNodeClick(node => {
                 // Al hacer clic, la cámara viaja al nodo
                 const distance = 40;
@@ -163,15 +177,48 @@
                             <span class="badge">Prob: ${(v.probability * 100).toFixed(1)}%</span>
                             <span class="badge">${new Date(v.timestamp).toLocaleTimeString()}</span>
                         </div>
+                        <div style="margin-top: 5px; font-size: 0.75em; text-align: right; color: #ff00ff;">
+                            ▶ Explain Why
+                        </div>
                     `;
-                    div.onclick = () => {
-                        console.log("Focusing on vision:", v.id);
-                    };
+                    div.onclick = () => explainVision(v.id);
                     container.appendChild(div);
                 });
             } catch (e) {
                 console.error("Error loading visions:", e);
                 // Dont show error to user in UI if its just polling noise, or show a status indicator
+            }
+        }
+
+        // XAI: Fetch explanation and highlight graph
+        async function explainVision(visionId) {
+            try {
+                console.log("Asking Precog to explain vision:", visionId);
+                const res = await fetch(`/visions/${visionId}/explain`);
+                if (!res.ok) throw new Error("Explanation failed");
+                const data = await res.json();
+
+                // Reset highlights
+                highlightedEdges.clear();
+
+                // Add critical edges to set
+                if (data.explanation) {
+                    data.explanation.forEach(edge => {
+                        // Store both directions just in case
+                        highlightedEdges.add(`${edge.source}-${edge.target}`);
+                        highlightedEdges.add(`${edge.target}-${edge.source}`);
+                    });
+                }
+
+                alert(`PRECOG REPORT:\nVision ${visionId} triggered due to ${data.explanation.length} critical connections.\n(Highlighted in Magenta)`);
+
+                // Refresh graph visuals
+                Graph.linkWidth(Graph.linkWidth())
+                    .linkColor(Graph.linkColor());
+
+            } catch (e) {
+                console.error("XAI Error:", e);
+                alert("Could not explain vision. Police clearance required.");
             }
         }
 

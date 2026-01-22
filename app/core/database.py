@@ -19,21 +19,30 @@ class Neo4jManager:
         self._password = os.getenv("NEO4J_PASSWORD", "secret_password_123") 
 
     async def connect(self):
-        """Inicializa el driver asíncrono."""
+        """Inicializa el driver asíncrono con Reintentos."""
+        import asyncio
         if self._driver is None:
-            try:
-                # AsyncGraphDatabase.driver is a synchronous factory method that returns an AsyncDriver
-                self._driver = AsyncGraphDatabase.driver(
-                    self._uri,
-                    auth=(self._user, self._password)
-                )
-                logger.info(f"Conectado a Neo4j en {self._uri}")
-                # Verify connectivity
-                await self._driver.verify_connectivity()
-            except Exception as e:
-                logger.error(f"Fallo al conectar con Neo4j: {e}")
-                self._driver = None
-                raise e
+            max_retries = 10
+            for attempt in range(max_retries):
+                try:
+                    self._driver = AsyncGraphDatabase.driver(
+                        self._uri,
+                        auth=(self._user, self._password)
+                    )
+                    # Verify connectivity
+                    await self._driver.verify_connectivity()
+                    logger.info(f"🔌 Conectado a Neo4j en {self._uri}")
+                    return
+                except Exception as e:
+                    logger.warning(f"Intento {attempt+1}/{max_retries} fallido al conectar con Neo4j: {e}")
+                    if self._driver:
+                        await self._driver.close()
+                        self._driver = None
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(5)  # Esperar 5 segundos antes de reintentar
+                    else:
+                        logger.error("❌ Fallo crítico al conectar con Neo4j tras varios intentos.")
+                        raise e
 
     async def close(self):
         """Cierra el pool de conexiones de manera limpia."""

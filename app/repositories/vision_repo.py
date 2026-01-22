@@ -48,11 +48,22 @@ class VisionRepository:
         MATCH (c:Citizen)-[:APPEARS_IN]->(v:Vision {id: $vid})-[:TARGETS]->(l:Location)
         RETURN v.id as id, v.probability as probability, 
                v.timestamp as timestamp, v.status as status,
-               {name: c.name, status: c.status} as perpetrator,
-               {name: l.name, type: l.type, env_risk: l.env_risk} as target
+               {id: c.id, name: c.name, status: c.status} as perpetrator,
+               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk} as target
         """
         results = await db_manager.query(query, {"vid": vision_id})
-        return results[0] if results else None
+        if not results:
+            return None
+            
+        row = results[0]
+        # Fix types for Pydantic
+        if hasattr(row['timestamp'], 'to_native'):
+            row['timestamp'] = row['timestamp'].to_native()
+            
+        if row['perpetrator'] and row['perpetrator'].get('status') is None:
+            row['perpetrator']['status'] = "UNKNOWN"
+            
+        return row
 
     async def find_active_visions(self) -> List[dict]:
         """
@@ -63,11 +74,21 @@ class VisionRepository:
         WHERE v.status = 'OPEN'
         RETURN v.id as id, v.probability as probability, 
                v.timestamp as timestamp, v.status as status,
-               {name: c.name, status: c.status} as perpetrator,
-               {name: l.name, type: l.type, env_risk: l.env_risk} as target
+               {id: c.id, name: c.name, status: c.status} as perpetrator,
+               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk} as target
         ORDER BY v.probability DESC
         """
-        return await db_manager.query(query)
+        results = await db_manager.query(query)
+        
+        # Fix types for Pydantic
+        for row in results:
+            if hasattr(row['timestamp'], 'to_native'):
+                row['timestamp'] = row['timestamp'].to_native()
+            
+            if row['perpetrator'] and row['perpetrator'].get('status') is None:
+                row['perpetrator']['status'] = "UNKNOWN"
+                
+        return results
 
     async def resolve_vision(self, vision_id: str, outcome: str):
         """
@@ -101,31 +122,52 @@ class VisionRepository:
     async def get_graph_visualization(self, limit: int = 50) -> dict:
         """
         Devuelve datos formateados para librerías de visualización (D3.js / Cytoscape).
-        Estructura: {nodes: [], links: []}
+        Combina la RED SOCIAL (Citizens) con las VISIONES (Predictions).
         """
-        query = """
+        nodes = {}
+        links = []
+
+        # 1. Fetch Visions (The "Red Balls")
+        vision_query = """
         MATCH (v:Vision)-[:APPEARS_IN]-(c:Citizen)
         MATCH (v)-[:TARGETS]-(l:Location)
         RETURN v, c, l
         LIMIT $limit
         """
-        results = await db_manager.query(query, {"limit": limit})
+        vision_results = await db_manager.query(vision_query, {"limit": limit})
         
-        nodes = {}
-        links = []
-        
-        for row in results:
-            # Extraer nodos (evitando duplicados usando diccionarios)
+        for row in vision_results:
             v, c, l = row['v'], row['c'], row['l']
             
             nodes[v['id']] = {"id": v['id'], "label": "Vision", "group": "red", "prob": v.get('probability', 0)}
             nodes[c['id']] = {"id": c['id'], "label": "Citizen", "group": "blue", "name": c.get('name', 'Unknown')}
             nodes[l['id']] = {"id": l['id'], "label": "Location", "group": "yellow", "name": l.get('name', 'Unknown')}
             
-            # Crear enlaces (Aristas)
             links.append({"source": c['id'], "target": v['id'], "type": "APPEARS_IN"})
             links.append({"source": v['id'], "target": l['id'], "type": "TARGETS"})
+
+        # 2. Fetch Social Background (The "City Web") - To populate graph when no visions exist
+        # We limit specific relationships to avoid overwhelming the browser
+        social_limit = 200 - len(links) # Balance load
+        if social_limit > 0:
+            social_query = """
+            MATCH (c1:Citizen)-[:KNOWS]->(c2:Citizen)
+            RETURN c1, c2
+            LIMIT $limit
+            """
+            social_results = await db_manager.query(social_query, {"limit": social_limit})
             
+            for row in social_results:
+                c1, c2 = row['c1'], row['c2']
+                
+                # Add nodes if they don't exist yet
+                if c1['id'] not in nodes:
+                    nodes[c1['id']] = {"id": c1['id'], "label": "Citizen", "group": "blue", "name": c1.get('name', 'Unknown')}
+                if c2['id'] not in nodes:
+                    nodes[c2['id']] = {"id": c2['id'], "label": "Citizen", "group": "blue", "name": c2.get('name', 'Unknown')}
+                
+                links.append({"source": c1['id'], "target": c2['id'], "type": "KNOWS"})
+
         return {
             "nodes": list(nodes.values()),
             "links": links

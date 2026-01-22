@@ -13,7 +13,7 @@ El sistema sigue un modelo **Cliente-Servidor con Persistencia en Grafos**, divi
 2.  **Capa de Cliente (The Ghost):** Interfaz ligera para los "ladrones" que visualiza el mapa y recibe instrucciones de evasión en tiempo real.
 
 ### Tecnologías Clave (Basado en Apuntes de Clase)
-* **Core AI:** GCN (Contexto) y GAT (Atención Selectiva).
+* **Core IA:** GCN (Contexto) y GAT (Atención Selectiva).
 * **Precog v2.0 (Advanced):** TGN (Memoria Temporal) y GNNExplainer (XAI).
 * **Persistencia:** Neo4j (Graph Database).
 * **Ejecución:** Modelo `Executor` con Colas (FIFO) para gestión de crisis.
@@ -102,17 +102,18 @@ services:
       - "7687:7687" # Bolt
     environment:
       NEO4J_AUTH: neo4j/secret_password
+```
 
-2. Estructura de Datos (Cypher Query Ejemplo)
-Cypher
-
+### 2. Estructura de Datos (Cypher Query Ejemplo)
+```cypher
 // Crear un nodo seguro conectado a una calle peligrosa
 CREATE (s:Escondite {name: 'Sotano Bar'})
 CREATE (c:Calle {name: 'Gran Via', riesgo: 0.9})
 CREATE (s)-[:CONECTA_CON {distancia: 10}]->(c)
-3. Ejecución del Modelo (Pseudo-Python)
-Python
+```
 
+### 3. Ejecución del Modelo (Pseudo-Python)
+```python
 # Lógica del Oráculo
 def predecir_ruta(grafo_data):
     # GAT Layer
@@ -120,3 +121,23 @@ def predecir_ruta(grafo_data):
     # La atención pondera la seguridad, no solo la distancia
     x = gat_conv(x, edge_index) 
     return ruta_optima(x)
+```
+
+---
+
+## Pre-Crime v2.0: Intel Avanzado
+
+Hemos evolucionado el sistema para superar la predicción policial estándar mediante dos módulos críticos:
+
+### 1. Memoria Temporal (TGN - Temporal Graph Networks)
+El sistema ya no solo mira "quién conoce a quién", sino **cuándo** y **con qué frecuencia** interactúan.
+*   **Módulo:** `PrecogTGN` en `app/models/neural_net.py`.
+*   **Función:** Detecta ráfagas de actividad sospechosa en el tiempo. Permite al sistema anticiparse a redadas basándose en secuencias de movimientos, no solo en fotos estáticas.
+
+### 2. Transparencia y Auditoría (XAI - Explainable AI)
+Para entender por qué el Oráculo marca un riesgo, hemos implementado **GNNExplainer**.
+*   **Endpoint:** `GET /visions/{vision_id}/explain`
+*   **Respuesta:** Devuelve un desglose de las conexiones exactas que están inflando el nivel de riesgo.
+*   **Uso:** Permite a los operativos saber si una alerta es por un contacto social ("Conoce a X") o por una acción física ("Estuvo en el Banco Y").
+
+> **Nota para el equipo:** El dashboard 3D (`/static/index.html`) visualiza estas alertas en tiempo real. 
