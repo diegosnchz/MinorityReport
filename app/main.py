@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.core.database import db_manager
 from app.core.ai_engine import precog_system
-from app.routers import predictions, citizens, locations, crimes, visions, simulation
+from app.routers import predictions, citizens, locations, crimes, visions, simulation, analytics
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -35,6 +35,7 @@ app.include_router(locations.router)
 app.include_router(crimes.router)
 app.include_router(visions.router)
 app.include_router(simulation.router)
+app.include_router(analytics.router)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -42,6 +43,11 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return HTMLResponse(content="", status_code=204)
+
+@app.get("/analytics-dashboard", response_class=HTMLResponse)
+async def analytics_dashboard():
+    with open("app/static/analytics.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
