@@ -9,240 +9,176 @@
     <style>
         body {
             margin: 0;
-            font-family: 'Courier New', monospace;
-            background: #050505;
+            background-color: #000;
             color: #00ff00;
+            font-family: monospace;
             overflow: hidden;
         }
 
-        #dashboard {
-            display: flex;
+        #graph-container {
+            width: 100vw;
             height: 100vh;
         }
 
-        #sidebar {
-            width: 300px;
-            min-width: 300px;
-            /* Prevent squashing */
-            flex-shrink: 0;
-            /* Force fixed width */
-            border-right: 1px solid #333;
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff00;
             padding: 20px;
-            overflow-y: auto;
-            background: #0a0a0a;
-            box-sizing: border-box;
-            /* Include padding in width */
+            width: 300px;
         }
 
-        #graph-container {
-            flex-grow: 1;
-            position: relative;
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
         }
 
         .vision-card {
             border: 1px solid #333;
-            padding: 10px;
             margin-bottom: 10px;
-            border-radius: 4px;
+            padding: 10px;
+            background: #0a0a0a;
             cursor: pointer;
-            transition: all 0.3s;
         }
 
         .vision-card:hover {
-            border-color: #ff0000;
-            background: #1a0505;
+            border-color: #00ff00;
         }
 
-        .vision-card.high-risk {
-            border-left: 4px solid #ff0000;
+        .high-risk {
+            color: #ff0000;
         }
 
-        h2 {
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
+        .medium-risk {
+            color: #ffa500;
         }
 
-        .badge {
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .btn-green {
             background: #333;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8em;
+            color: #00ff00;
+            border: 1px solid #00ff00;
         }
 
-        @media (max-width: 768px) {
-            #dashboard {
-                flex-direction: column;
-            }
+        .btn-green:hover {
+            background: #004400;
+        }
 
-            #sidebar {
-                width: 100%;
-                height: 300px;
-                order: 2;
-                border-right: none;
-                border-top: 1px solid #333;
-            }
+        .btn-red {
+            background: #aa0000;
+            color: white;
+            border: 1px solid #ff0000;
+        }
 
-            #graph-container {
-                height: 100vh;
-                order: 1;
-            }
+        .btn-red:hover {
+            background: #ff0000;
+        }
+
+        .btn-blue {
+            background: #0000aa;
+            color: white;
+            border: 1px solid #00aaff;
+        }
+
+        .btn-blue:hover {
+            background: #00aaff;
         }
     </style>
 </head>
 
 <body>
-    <div id="dashboard">
-        <div id="sidebar">
-            <h2>ACTIVE VISIONS</h2>
-            <div id="vision-list">
-                <div style="color: #666;">Scanning system...</div>
-            </div>
-
-            <div style="margin-top: 20px;">
-                <button onclick="window.location.href='/analytics-dashboard'"
-                    style="width: 100%; padding: 10px; background: #333; color: #00ff00; border: 1px solid #00ff00; margin-bottom: 10px; cursor: pointer;">
-                    VIEW ANALYTICS DIVISION
-                </button>
-
-                <button onclick="triggerSimulation()"
-                    style="width: 100%; padding: 10px; background: #ff0000; color: white; border: none; cursor: pointer;">
-                    RUN SIMULATION STEP
-                </button>
-            </div>
+    <div id="ui-layer">
+        <h1>Active Visions</h1>
+        <div id="vision-feed">
+            No active threats detected.
         </div>
-        <div id="graph-container"></div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn-green" onclick="window.location.href='/analytics-dashboard'">
+                VIEW ANALYTICS DIVISION
+            </button>
+
+            <button class="btn-blue" onclick="window.location.href='/map-view'">
+                VIEW GEOSPATIAL MAP
+            </button>
+
+            <button class="btn-red" onclick="triggerSimulation()">
+                RUN SIMULATION STEP
+            </button>
+        </div>
     </div>
+    <div id="graph-container"></div>
 
     <script>
-        // State for XAI highlights
-        let highlightedEdges = new Set();
-
-        // 1. Configuración del Grafo 3D
-        const Graph = ForceGraph3D()
-            (document.getElementById('graph-container'))
-            .jsonUrl('/visions/graph?limit=200') // Llama a nuestra API
-            .nodeLabel('label')
+        const graphElem = document.getElementById('graph-container');
+        let Graph = ForceGraph3D()(graphElem)
+            .backgroundColor('#000000')
             .nodeAutoColorBy('group')
-            .nodeVal('val') // Tamaño del nodo basado en riesgo
-            .linkDirectionalParticles(2) // Partículas fluyendo en las conexiones
-            .linkDirectionalParticleSpeed(d => 0.005) // Fixed speed for visibility
-            .linkColor(link => {
-                // XAI: Highlight critical edges
-                const id = `${link.source.id || link.source}-${link.target.id || link.target}`;
-                if (highlightedEdges.has(id)) return '#ff00ff'; // Magenta for explanation
-                return '#ffffff';
-            })
-            .linkWidth(link => {
-                const id = `${link.source.id || link.source}-${link.target.id || link.target}`;
-                if (highlightedEdges.has(id)) return 3; // Thicker line
-                return 1;
-            })
+            .nodeLabel(node => `${node.label} (${node.type})`)
+            .linkWidth(link => link.value > 0.5 ? 2 : 1)
             .onNodeClick(node => {
-                // Al hacer clic, la cámara viaja al nodo
                 const distance = 40;
                 const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
                 Graph.cameraPosition(
                     { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
                     node,
-                    3000  // Duración del vuelo (ms)
+                    3000
                 );
             });
 
-        // Configuración de colores personalizada
-        Graph.nodeColor(node => {
-            if (node.group === 'red') return '#ff0000';   // Vision
-            if (node.group === 'blue') return '#00aaff';  // Citizen
-            if (node.group === 'yellow') return '#ffcc00'; // Location
-            return '#ffffff';
-        });
-
-        // 2. Lógica del Sidebar (Visiones Activas)
-        async function loadVisions() {
+        async function fetchGraphData() {
             try {
-                const response = await fetch('/visions/active');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const visions = await response.json();
+                const res = await fetch('/visions/graph?limit=300');
+                const data = await res.json();
+                Graph.graphData(data);
+            } catch (e) { console.error("Error fetching graph:", e); }
+        }
 
-                const container = document.getElementById('vision-list');
-                container.innerHTML = ''; // Limpiar
+        async function fetchActiveVisions() {
+            const feed = document.getElementById('vision-feed');
+            try {
+                const res = await fetch('/visions/active');
+                const visions = await res.json();
 
                 if (visions.length === 0) {
-                    container.innerHTML = '<div style="color: #666;">No active threats detected.</div>';
+                    feed.innerHTML = "No active threats detected.";
                     return;
                 }
 
-                visions.forEach(v => {
-                    const div = document.createElement('div');
-                    div.className = 'vision-card high-risk';
-                    div.innerHTML = `
-                        <div style="font-weight: bold; color: #ff5555;">Warning: ${v.perpetrator.name}</div>
-                        <div style="font-size: 0.9em;">Target: ${v.target.name}</div>
-                        <div style="font-size: 0.8em; margin-top: 5px;">
-                            <span class="badge">Prob: ${(v.probability * 100).toFixed(1)}%</span>
-                            <span class="badge">${new Date(v.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        <div style="margin-top: 5px; font-size: 0.75em; text-align: right; color: #ff00ff;">
-                            ▶ Explain Why
-                        </div>
-                    `;
-                    div.onclick = () => explainVision(v.id);
-                    container.appendChild(div);
-                });
-            } catch (e) {
-                console.error("Error loading visions:", e);
-                // Dont show error to user in UI if its just polling noise, or show a status indicator
-            }
-        }
+                feed.innerHTML = visions.map(v => `
+                    <div class="vision-card">
+                        <div style="font-weight:bold;">${v.perpetrator.name} -> ${v.target.name}</div>
+                        <div>Prob: <span class="${v.probability > 0.8 ? 'high-risk' : 'medium-risk'}">${(v.probability * 100).toFixed(1)}%</span></div>
+                        <div style="font-size:0.8em; color:#888;">${new Date(v.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                `).join('');
 
-        // XAI: Fetch explanation and highlight graph
-        async function explainVision(visionId) {
-            try {
-                console.log("Asking Precog to explain vision:", visionId);
-                const res = await fetch(`/visions/${visionId}/explain`);
-                if (!res.ok) throw new Error("Explanation failed");
-                const data = await res.json();
-
-                // Reset highlights
-                highlightedEdges.clear();
-
-                // Add critical edges to set
-                if (data.explanation) {
-                    data.explanation.forEach(edge => {
-                        // Store both directions just in case
-                        highlightedEdges.add(`${edge.source}-${edge.target}`);
-                        highlightedEdges.add(`${edge.target}-${edge.source}`);
-                    });
-                }
-
-                alert(`PRECOG REPORT:\nVision ${visionId} triggered due to ${data.explanation.length} critical connections.\n(Highlighted in Magenta)`);
-
-                // Refresh graph visuals
-                Graph.linkWidth(Graph.linkWidth())
-                    .linkColor(Graph.linkColor());
-
-            } catch (e) {
-                console.error("XAI Error:", e);
-                alert("Could not explain vision. Police clearance required.");
-            }
+            } catch (e) { console.error("Error fetching visions:", e); }
         }
 
         async function triggerSimulation() {
-            try {
-                const res = await fetch('/simulation/step', { method: 'POST' });
-                if (!res.ok) throw new Error('Simulation failed');
-                // Recargar datos después de simular
-                loadVisions();
-                Graph.jsonUrl('/visions/graph?limit=200&t=' + new Date().getTime());
-            } catch (e) {
-                console.error("Simulation failed:", e);
-                alert("Trigger failed: " + e);
-            }
+            await fetch('/simulation/step', { method: 'POST' });
+            fetchGraphData();
+            fetchActiveVisions();
         }
 
-        // Cargar al inicio
-        loadVisions();
-        setInterval(loadVisions, 5000); // Auto-refrescar cada 5s
+        fetchGraphData();
+        fetchActiveVisions();
+        setInterval(fetchActiveVisions, 5000);
     </script>
 </body>
 

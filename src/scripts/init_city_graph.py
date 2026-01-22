@@ -58,13 +58,19 @@ class PreCrimeCityGenerator:
             # Los callejones tienen un factor de riesgo ambiental más alto
             env_risk = 0.9 if l_type == "Dark Alley" else 0.1
             
+            # MADRID COORDINATES (Approx Bounding Box)
+            # Lat: 40.35 to 40.50
+            # Lon: -3.75 to -3.55
+            lat = 40.35 + (random.random() * (40.50 - 40.35))
+            lon = -3.75 + (random.random() * (-3.55 - -3.75))
+
             locations.append({
                 "id": f"LOC_{i}",
                 "name": f"{fake.street_name()} {l_type}",
                 "type": l_type,
                 "env_risk": env_risk,
-                "coord_x": float(fake.latitude()), # Ensure float for Neo4j point
-                "coord_y": float(fake.longitude())
+                "coord_x": lat, 
+                "coord_y": lon
             })
 
         query = """

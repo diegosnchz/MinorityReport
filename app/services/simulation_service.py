@@ -23,30 +23,29 @@ class SimulationService:
             print("Faltan datos para simular.")
             return
 
-        # 2. Lógica de "Pre-Crimen"
-        # Seleccionamos un par aleatorio y calculamos probabilidad
-        suspect = random.choice(citizens)
-        target = random.choice(locations)
-        
-        # Simulamos la inferencia de la IA (GraphSAGE + RedGAN)
-        # En producción, aquí llamaríamos a `ai_engine.predict()`
-        probability = self._calculate_mock_probability(suspect, target)
-        
-        # 3. Si el riesgo es alto, creamos la conexión en el Grafo
-        if probability > 0.2:
-            print(f"BOLA ROJA GENERADA: {suspect['name']} en {target['name']}")
-            vision_data = VisionCreate(
-                citizen_id=suspect['id'],
-                location_id=target['id'],
-                probability=probability,
-                predicted_date=datetime.now() + timedelta(hours=random.randint(1, 48)),
-                ai_model_version="Sim_v1"
-            )
-            # Aquí es donde se "Conecta el Grafo":
-            # (Citizen)-[:APPEARS_IN]->(Vision)-[:TARGETS]->(Location)
-            await vision_repo.create_vision(vision_data)
-        else:
-            print(f"   ...Análisis negativo ({probability:.2f}). Ciudad segura.")
+        # 2. Lógica de "Pre-Crimen" (BATCH PROCESS)
+        # Generamos múltiples intentos para poblar el grafo
+        results = []
+        for _ in range(10):
+            suspect = random.choice(citizens)
+            target = random.choice(locations)
+            
+            # Boost artificial para DEMO: +0.2 al riesgo base
+            probability = self._calculate_mock_probability(suspect, target) + 0.15
+            
+            # 3. Si el riesgo es alto, creamos la conexión en el Grafo
+            if probability > 0.4: # Umbral más alto pero con boost
+                print(f"BOLA ROJA GENERADA: {suspect['name']} en {target['name']} (Prob: {probability:.2f})")
+                vision_data = VisionCreate(
+                    citizen_id=suspect['id'],
+                    location_id=target['id'],
+                    probability=min(probability, 0.99),
+                    predicted_date=datetime.now() + timedelta(hours=random.randint(1, 48)),
+                    ai_model_version="Sim_v1"
+                )
+                await vision_repo.create_vision(vision_data)
+                results.append("CRIME_DETECTED")
+        return {"processed": 10, "crimes": len(results)}
 
     def _calculate_mock_probability(self, citizen: dict, location: dict) -> float:
         """

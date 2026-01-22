@@ -8,3 +8,12 @@ python-dotenv
 numpy
 pandas
 faker
+
+# Evasion Protocol (New)
+xgboost
+shap
+panel
+bokeh
+holoviews
+optuna
+hvplot
