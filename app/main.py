@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.core.database import db_manager
 from app.core.ai_engine import precog_system
-from app.routers import predictions, citizens, locations, crimes, visions, simulation, analytics, map_router
+from app.routers import predictions, citizens, locations, crimes, visions, simulation, analytics, map_router, evasion_router
+import numpy as np
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -37,6 +38,7 @@ app.include_router(visions.router)
 app.include_router(simulation.router)
 app.include_router(analytics.router)
 app.include_router(map_router.router)
+app.include_router(evasion_router.router)
 
 # Mount Panel Apps (Evasion Protocol)
 import panel as pn
@@ -51,10 +53,6 @@ pn.serve(
     show=False,
     threaded=True
 )
-
-# Proxy/Redirect for ease of access (Optional, usually we run Panel separately or use middleware)
-# For simplicity in this demo, accessing port 5000 directly is easier, 
-# but let's document it for the user.
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

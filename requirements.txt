@@ -17,3 +17,13 @@ bokeh
 holoviews
 optuna
 hvplot
+
+# HPC & MLOps Evolution (New)
+pyarrow
+numba
+zarr
+xarray
+kfp
+dask
+fastparquet
+httpx

@@ -26,6 +26,7 @@
             --accent-blue: #38bdf8;
             --accent-red: #f87171;
             --accent-green: #4ade80;
+            --accent-purple: #a855f7;
         }
 
         body {
@@ -35,10 +36,8 @@
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             overflow: hidden;
-            /* Map takes full screen */
         }
 
-        /* Fullscreen Map */
         #map-container {
             position: absolute;
             top: 0;
@@ -48,12 +47,10 @@
             z-index: 0;
         }
 
-        /* Glass Overlay UI */
         .overlay-ui {
             position: absolute;
             z-index: 10;
             pointer-events: none;
-            /* Let clicks pass through to map */
             width: 100%;
             height: 100%;
             display: flex;
@@ -61,7 +58,6 @@
             justify-content: space-between;
         }
 
-        /* Top Bar */
         .top-bar {
             background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, transparent 100%);
             padding: 20px 40px;
@@ -85,7 +81,6 @@
             filter: drop-shadow(0 0 8px var(--accent-blue));
         }
 
-        /* Sidebar (Left) */
         .sidebar {
             position: absolute;
             left: 40px;
@@ -116,7 +111,6 @@
             padding-bottom: 8px;
         }
 
-        /* Vision Feed Items */
         .vision-item {
             background: rgba(255, 255, 255, 0.03);
             border-left: 3px solid var(--accent-red);
@@ -137,7 +131,6 @@
             color: var(--accent-red);
         }
 
-        /* Controls */
         .control-btn {
             width: 100%;
             padding: 12px;
@@ -164,7 +157,6 @@
             opacity: 0.9;
         }
 
-        /* Bottom Status */
         .status-bar {
             position: absolute;
             bottom: 30px;
@@ -200,15 +192,12 @@
 
 <body>
 
-    <!-- Map Container -->
     <div id="map-container"></div>
     <div id="tooltip"
         style="position: absolute; z-index: 100; pointer-events: none; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 4px; display: none;">
     </div>
 
-    <!-- UI Overlay -->
     <div class="overlay-ui">
-        <!-- Header -->
         <div class="top-bar">
             <div class="brand">
                 <i class="fas fa-eye"></i> PRE-CRIME UNIT <span style="opacity: 0.5; font-weight: 300;"> | MADRID
@@ -226,9 +215,7 @@
             </div>
         </div>
 
-        <!-- Sidebar -->
         <div class="sidebar">
-            <!-- Active Visions -->
             <div class="glass-panel" style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
                 <div class="panel-header">Active Predictions <span class="live-indicator"></span></div>
                 <div id="visions-list" style="overflow-y: auto; flex-grow: 1;">
@@ -236,11 +223,14 @@
                 </div>
             </div>
 
-            <!-- Controls -->
             <div class="glass-panel">
                 <div class="panel-header">System Controls</div>
                 <button class="control-btn" onclick="triggerSimulation()">
                     <i class="fas fa-bolt"></i> RUN SIMULATION STEP
+                </button>
+                <button class="control-btn" style="background: var(--accent-purple); color: white;"
+                    onclick="triggerEscapeRouting()">
+                    <i class="fas fa-shield-alt"></i> GENERATE EVASION ROUTE
                 </button>
                 <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin-top: 10px;">
                     Next update in: <span id="countdown">--</span>
@@ -248,78 +238,116 @@
             </div>
         </div>
 
-        <!-- Status -->
         <div class="status-bar glass-panel">
             <i class="fas fa-map-marked-alt"></i> Viewing: <b>Madrid Central</b> | Lat: 40.41 | Lon: -3.70
         </div>
     </div>
 
     <script>
-        const { DeckGL, HexagonLayer, ScatterplotLayer } = deck;
+        const { DeckGL, HexagonLayer, ScatterplotLayer, ArcLayer } = deck;
 
         let deckgl;
+        let escapeRoutes = [];
+        let heatData = [];
+        let visionsData = [];
 
         async function initMap() {
-            // Fetch Data
-            const [heatBtn, visionsData] = await Promise.all([
+            const [heatBtn, visions] = await Promise.all([
                 fetch('/map/heatmap').then(r => r.json()),
                 fetch('/map/visions').then(r => r.json())
             ]);
+            heatData = heatBtn;
+            visionsData = visions;
 
-            // DeckGL
-            deckgl = new DeckGL({
-                container: 'map-container',
-                mapStyle: 'mapbox://styles/mapbox/dark-v11', // Mapbox Dark Theme
-                mapboxApiAccessToken: MAPBOX_TOKEN,
-                initialViewState: MADRID_VIEW_STATE,
-                controller: true,
-                layers: [
-                    // Layer 1: Heatmap (Crime Density)
-                    new HexagonLayer({
-                        id: 'heatmap-layer',
-                        data: heatBtn,
-                        pickable: true,
-                        extruded: true,
-                        radius: 200, // 200m bins
-                        elevationScale: 4,
-                        getPosition: d => d.coordinates,
-                        getElevationWeight: d => d.weight,
-                        colorRange: [
-                            [1, 152, 189],
-                            [73, 227, 206],
-                            [216, 254, 181],
-                            [254, 237, 177],
-                            [254, 173, 154],
-                            [209, 55, 78]
-                        ],
-                    }),
-                    // Layer 2: Active Visions (Pulsing Dots)
-                    new ScatterplotLayer({
-                        id: 'visions-layer',
-                        data: visionsData,
-                        pickable: true,
-                        opacity: 0.8,
-                        stroked: true,
-                        filled: true,
-                        radiusScale: 6,
-                        radiusMinPixels: 5,
-                        radiusMaxPixels: 50,
-                        lineWidthMinPixels: 2,
-                        getPosition: d => [d.lon, d.lat],
-                        getFillColor: [255, 0, 0],
-                        getLineColor: [255, 255, 255],
-                        getLineWidth: 1,
-                        // Animation hook? (Need requestAnimationFrame loop for real pulse)
-                    })
-                ],
-                getTooltip: ({ object }) => object && {
-                    html: object.location_name ?
-                        `<b>${object.location_name}</b><br>Risk: ${(object.probability * 100).toFixed(1)}%` :
-                        `Density: ${object.elevationValue} crimes`
-                }
-            });
-
+            updateLayers();
             renderVisionsList(visionsData);
+        }
+
+        function updateLayers() {
+            const layers = [
+                new HexagonLayer({
+                    id: 'heatmap-layer',
+                    data: heatData,
+                    pickable: true,
+                    extruded: true,
+                    radius: 200,
+                    elevationScale: 4,
+                    getPosition: d => d.coordinates,
+                    getElevationWeight: d => d.weight,
+                    colorRange: [
+                        [1, 152, 189], [73, 227, 206], [216, 254, 181],
+                        [254, 237, 177], [254, 173, 154], [209, 55, 78]
+                    ],
+                }),
+                new ScatterplotLayer({
+                    id: 'visions-layer',
+                    data: visionsData,
+                    pickable: true,
+                    opacity: 0.8,
+                    stroked: true,
+                    filled: true,
+                    radiusScale: 6,
+                    radiusMinPixels: 5,
+                    getPosition: d => [d.lon, d.lat],
+                    getFillColor: [255, 0, 0],
+                    getLineColor: [255, 255, 255],
+                    getLineWidth: 1,
+                }),
+                new ArcLayer({
+                    id: 'escape-routes-layer',
+                    data: escapeRoutes,
+                    pickable: true,
+                    getWidth: 4,
+                    getSourcePosition: d => d.source,
+                    getTargetPosition: d => d.target,
+                    getSourceColor: [0, 255, 255, 200],
+                    getTargetColor: [168, 85, 247, 200],
+                })
+            ];
+
+            if (!deckgl) {
+                deckgl = new DeckGL({
+                    container: 'map-container',
+                    mapStyle: 'mapbox://styles/mapbox/dark-v11',
+                    mapboxApiAccessToken: MAPBOX_TOKEN,
+                    initialViewState: MADRID_VIEW_STATE,
+                    controller: true,
+                    layers: layers,
+                    getTooltip: ({ object }) => object && {
+                        html: object.location_name ?
+                            `<b>${object.location_name}</b><br>Risk: ${(object.probability * 100).toFixed(1)}%` :
+                            `Density: ${object.elevationValue || 'N/A'}`
+                    }
+                });
+            } else {
+                deckgl.setProps({ layers: layers });
+            }
+        }
+
+        async function triggerEscapeRouting() {
+            const btn = document.querySelector('button[onclick="triggerEscapeRouting()"]');
+            btn.innerHTML = '<i class="fas fa-route fa-spin"></i> CALCULATING HPC PATH...';
+
+            try {
+                const res = await fetch('/evasion/route?origin_id=LOC_SOL&destination_id=LOC_RETIRO');
+                if (!res.ok) throw new Error("Route calculation failed");
+                const data = await res.json();
+
+                escapeRoutes = [];
+                for (let i = 0; i < data.path.length - 1; i++) {
+                    escapeRoutes.push({
+                        source: [data.path[i].lon, data.path[i].lat],
+                        target: [data.path[i + 1].lon, data.path[i + 1].lat]
+                    });
+                }
+
+                updateLayers();
+                alert(`Path Generated via HPC Optimization (Numba JIT). Total Risk: ${data.total_risk_score.toFixed(2)}`);
+            } catch (e) {
+                console.error(e);
+                alert("Error: Simulation nodes not pre-populated for this sector.");
+            }
+            btn.innerHTML = '<i class="fas fa-shield-alt"></i> GENERATE EVASION ROUTE';
         }
 
         function renderVisionsList(visions) {
@@ -329,7 +357,6 @@
                 container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); margin-top:20px;">No Active Threats</div>';
                 return;
             }
-
             visions.forEach(v => {
                 const el = document.createElement('div');
                 el.className = 'vision-item';
@@ -339,14 +366,10 @@
                     <div style="font-size: 0.8rem; color: #aaa;">ID: ${v.id}</div>
                 `;
                 el.onclick = () => {
-                    // Fly to location
                     deckgl.setProps({
                         initialViewState: {
-                            longitude: v.lon,
-                            latitude: v.lat,
-                            zoom: 15,
-                            transitionDuration: 1000,
-                            pitch: 60
+                            longitude: v.lon, latitude: v.lat, zoom: 15,
+                            transitionDuration: 1000, pitch: 60
                         }
                     });
                 };
@@ -359,7 +382,6 @@
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESSING...';
             try {
                 await fetch('/simulation/step', { method: 'POST' });
-                // Refresh Map Data
                 initMap();
             } catch (e) { console.error(e); }
             btn.innerHTML = '<i class="fas fa-bolt"></i> RUN SIMULATION STEP';

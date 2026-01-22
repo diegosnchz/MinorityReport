@@ -17,17 +17,24 @@ class EvasionOptimizer:
         
     def objective(self, trial):
         """Función objetivo que Optuna intentará maximizar."""
-        # 1. Sugerir Hiperparámetros
-        params = {
+        # 1. Hiperparámetros de GNN
+        gnn_params = {
             "learning_rate": trial.suggest_float("learning_rate", 1e-4, 1e-2, log=True),
             "num_heads": trial.suggest_categorical("num_heads", [2, 4, 8]),
             "hidden_channels": trial.suggest_int("hidden_channels", 16, 128),
             "dropout": trial.suggest_float("dropout", 0.1, 0.5)
         }
         
-        # 2. Entrenar Modelo (Simulación rápida para demo)
-        # En prod: esto llamaría a trainer.py con datos reales de Neo4j
-        accuracy = train_model(params)
+        # 2. Hiperparámetros de XGBoost (ACELERADO POR GPU)
+        xgb_params = {
+            "max_depth": trial.suggest_int("max_depth", 3, 10),
+            "gamma": trial.suggest_float("gamma", 0, 1),
+            "tree_method": "gpu_hist", # O 'hist' con device='cuda' en versiones nuevas
+            "predictor": "gpu_predictor"
+        }
+        
+        # 3. Entrenar Modelo (Simulación rápida para demo)
+        accuracy = train_model({**gnn_params, **xgb_params})
         
         return accuracy
 
