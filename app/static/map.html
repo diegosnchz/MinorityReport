@@ -345,7 +345,7 @@
                 alert(`Path Generated via HPC Optimization (Numba JIT). Total Risk: ${data.total_risk_score.toFixed(2)}`);
             } catch (e) {
                 console.error(e);
-                alert("Error: Simulation nodes not pre-populated for this sector.");
+                alert("HPC Error: " + e.message + ". Try running a Simulation Step first to populate city nodes.");
             }
             btn.innerHTML = '<i class="fas fa-shield-alt"></i> GENERATE EVASION ROUTE';
         }

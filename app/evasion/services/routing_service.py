@@ -19,7 +19,13 @@ class RoutingService:
         end = await location_repo.find_by_id(end_loc_id)
         
         if not start or not end:
-            return None
+            # FALLBACK: Si no existen los IDs específicos (LOC_SOL), pillamos dos al azar para la DEMO
+            all_locs = await location_repo.find_all(limit=10)
+            if len(all_locs) >= 2:
+                start = all_locs[0]
+                end = all_locs[1]
+            else:
+                return None
 
         # 2. Simular generación de nodos intermedios (City Graph)
         # En una ruta real, estos vendrían de Neo4j
@@ -47,15 +53,22 @@ class RoutingService:
     def _generate_simulated_path(self, start, end):
         """Genera puntos geográficos entre origen y destino."""
         n_steps = 5
-        lats = np.linspace(start['lat'], end['lat'], n_steps)
-        lons = np.linspace(start['lon'], end['lon'], n_steps)
+        
+        # Defensive check for coordinates
+        start_lat = start.get('lat') or start.get('latitude') or 40.41
+        start_lon = start.get('lon') or start.get('longitude') or -3.70
+        end_lat = end.get('lat') or end.get('latitude') or 40.415
+        end_lon = end.get('lon') or end.get('longitude') or -3.705
+
+        lats = np.linspace(start_lat, end_lat, n_steps)
+        lons = np.linspace(start_lon, end_lon, n_steps)
         
         path = []
         for i in range(n_steps):
             path.append({
-                "lat": lats[i] + random.uniform(-0.001, 0.001),
-                "lon": lons[i] + random.uniform(-0.001, 0.001),
-                "name": f"Waypoint {i}" if i > 0 else start['name']
+                "lat": float(lats[i]) + random.uniform(-0.001, 0.001),
+                "lon": float(lons[i]) + random.uniform(-0.001, 0.001),
+                "name": f"Waypoint {i}" if i > 0 else start.get('name', 'Origin')
             })
         return path
 

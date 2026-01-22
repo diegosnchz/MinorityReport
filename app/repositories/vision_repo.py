@@ -49,7 +49,8 @@ class VisionRepository:
         RETURN v.id as id, v.probability as probability, 
                v.timestamp as timestamp, v.status as status,
                {id: c.id, name: c.name, status: c.status} as perpetrator,
-               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk} as target
+               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk,
+                latitude: l.coord.latitude, longitude: l.coord.longitude} as target
         """
         results = await db_manager.query(query, {"vid": vision_id})
         if not results:
@@ -75,7 +76,8 @@ class VisionRepository:
         RETURN v.id as id, v.probability as probability, 
                v.timestamp as timestamp, v.status as status,
                {id: c.id, name: c.name, status: c.status} as perpetrator,
-               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk} as target
+               {id: l.id, name: l.name, type: l.type, env_risk: l.env_risk,
+                latitude: l.coord.latitude, longitude: l.coord.longitude} as target
         ORDER BY v.probability DESC
         """
         results = await db_manager.query(query)
