@@ -83,66 +83,25 @@ class HiveCoreClient {
 // THE GHOST - Core Script
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     const hiveClient = new HiveCoreClient();
     hiveClient.connectWebSocket();
 
     // ========================================================================
-    // 1. DATOS DEL GRAFO 3D
+    // 1. CARGA DE DATOS (JSON EXTERNO)
     // ========================================================================
-    // Define todos los nodos (ubicaciones) y enlaces (conexiones) del mapa
+    // Cargamos la topología de la ciudad desde un archivo separado para despliegue
 
-    const graphData = {
-        nodes: [
-            // Hideout único - El destino seguro del protocolo de pánico
-            { id: 's1', name: 'Safe Hideout', type: 'hideout', x: -200, y: 50, z: -100 },
-
-            // Otras zonas seguras (no son hideouts)
-            { id: 's2', name: 'Safehouse Beta', type: 'blindspot', x: 250, y: -80, z: 200 },
-            { id: 's3', name: 'Safehouse Gamma', type: 'blindspot', x: -150, y: 100, z: 250 },
-            { id: 's4', name: 'Safehouse Delta', type: 'junction', x: 300, y: -50, z: -150 },
-
-            // Bancos - Objetivos de alto valor pero con más vigilancia
-            { id: 'b1', name: 'Central Bank', type: 'bank', x: 0, y: 0, z: 0 },
-            { id: 'b2', name: 'ATM District 7', type: 'bank', x: 150, y: 30, z: -80 },
-
-            // Zonas policiales - Áreas de máximo riesgo
-            { id: 'p1', name: 'District 4 Police', type: 'police', x: 200, y: -100, z: -200 },
-            { id: 'p2', name: 'Metro Station Guard', type: 'police', x: -100, y: 80, z: 100 },
-            { id: 'p3', name: 'Checkpoint 6', type: 'police', x: -250, y: 0, z: -50 },
-
-            // Puntos ciegos - Zonas con poca vigilancia
-            { id: 'bs1', name: 'Blind Spot 09', type: 'blindspot', x: -180, y: 50, z: 80 },
-            { id: 'bs2', name: 'Blind Spot 12', type: 'blindspot', x: 180, y: 120, z: 220 },
-            { id: 'bs3', name: 'Alley Network', type: 'blindspot', x: 280, y: -30, z: 120 },
-
-            // Junctions - Zonas públicas de tránsito
-            { id: 'junc1', name: 'Plaza Central', type: 'junction', x: 50, y: -20, z: -120 },
-            { id: 'junc2', name: 'Market Square', type: 'junction', x: -120, y: 30, z: -30 },
-            { id: 'junc3', name: 'East End', type: 'junction', x: 230, y: 0, z: 50 }
-        ],
-        links: [
-            { source: 's1', target: 'junc2', riesgo: 0.15, baseRiesgo: 0.15 },
-            { source: 'junc2', target: 'b1', riesgo: 0.3, baseRiesgo: 0.3 },
-            { source: 'b1', target: 'junc1', riesgo: 0.25, baseRiesgo: 0.25 },
-            { source: 'junc1', target: 'p1', riesgo: 0.85, baseRiesgo: 0.85 },
-            { source: 'junc1', target: 'b2', riesgo: 0.35, baseRiesgo: 0.35 },
-            { source: 'b2', target: 'junc3', riesgo: 0.4, baseRiesgo: 0.4 },
-            { source: 'junc3', target: 's2', riesgo: 0.2, baseRiesgo: 0.2 },
-            { source: 's2', target: 'bs2', riesgo: 0.1, baseRiesgo: 0.1 },
-            { source: 'bs2', target: 's3', riesgo: 0.08, baseRiesgo: 0.08 },
-            { source: 's3', target: 'p2', riesgo: 0.7, baseRiesgo: 0.7 },
-            { source: 'p2', target: 'bs1', riesgo: 0.6, baseRiesgo: 0.6 },
-            { source: 'bs1', target: 's1', riesgo: 0.05, baseRiesgo: 0.05 },
-            { source: 's1', target: 'p3', riesgo: 0.8, baseRiesgo: 0.8 },
-            { source: 'p3', target: 'junc2', riesgo: 0.75, baseRiesgo: 0.75 },
-            { source: 'junc3', target: 'bs3', riesgo: 0.12, baseRiesgo: 0.12 },
-            { source: 'bs3', target: 's4', riesgo: 0.15, baseRiesgo: 0.15 },
-            { source: 's4', target: 'p1', riesgo: 0.9, baseRiesgo: 0.9 },
-            { source: 'b1', target: 'p2', riesgo: 0.65, baseRiesgo: 0.65 }
-        ]
-    };
+    let graphData;
+    try {
+        const dataResponse = await fetch('data.json');
+        graphData = await dataResponse.json();
+        console.log("THE GHOST: Topología cargada desde data.json");
+    } catch (error) {
+        console.error("THE GHOST: Error cargando data.json. Usando datos de emergencia.", error);
+        graphData = { nodes: [{ id: 's1', name: 'Emergency Hideout', type: 'hideout', x: 0, y: 0, z: 0 }], links: [] };
+    }
 
     // Estado del agente
     let currentNodeId = 's1';
@@ -229,16 +188,22 @@ document.addEventListener('DOMContentLoaded', () => {
         .nodeLabel('name')
         .nodeVal(8)
         .nodeColor(node => {
-            if (node.id === currentNodeId) return '#00ff95';
+            if (node.id === currentNodeId) return '#00ff95'; // Agente actual
+
+            const typeColors = {
+                hideout: '#00ff95',   // Verde (Seguro)
+                bank: '#ffd700',      // Oro (Objetivo)
+                police: '#ff3e3e',    // Rojo (Peligro)
+                blindspot: '#bb00ff', // Púrpura (Invisibilidad)
+                junction: '#4dabf7'   // Azul (Tránsito)
+            };
+
+            const baseColor = typeColors[node.type] || '#ff8c42';
+
             if (visitedNodes.has(node.id)) {
-                const age = Date.now() - visitedNodes.get(node.id);
-                const fadeFactor = Math.min(age / 60000, 1);
-                const r = Math.floor(204 - fadeFactor * 102);
-                const g = Math.floor(102 - fadeFactor * 51);
-                const b = Math.floor(51 - fadeFactor * 25);
-                return `rgb(${r}, ${g}, ${b})`;
+                return baseColor; // Mantener color para nodos visitados (táctico)
             }
-            return '#ff8c42';
+            return baseColor;
         })
         .nodeOpacity(1.0)
         .nodeResolution(20)
@@ -329,13 +294,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Notificar al backend FastAPI
         const response = await hiveClient.reportAlert(currentNodeId, "PANIC", "Evasion protocol triggered by user");
+
         if (response.status === "received") {
             logMessage(`📡 BACKEND: ${response.message.toUpperCase()}`);
-        } else if (response.status === "offline") {
-            logMessage('📡 BACKEND: OFFLINE (Running local evasion)');
+
+            // Si el Oráculo (GAT) nos da una ruta, la usamos. Si no, calculamos localmente.
+            if (response.path && response.path.length > 0) {
+                panicRoute = response.path;
+                logMessage('🧠 GAT MODEL: OPTIMAL ROUTE RECEIVED');
+            } else {
+                logMessage('🧠 GAT MODEL: NO ROUTE PROVIDED. CALCULATING LOCAL FALLBACK...');
+                panicRoute = findSafestPath(currentNodeId, 'hideout');
+            }
+        } else {
+            if (response.status === "offline") {
+                logMessage('📡 BACKEND: OFFLINE (Running local evasion)');
+            }
+            panicRoute = findSafestPath(currentNodeId, 'hideout');
         }
 
-        panicRoute = findSafestPath(currentNodeId, 'hideout');
         if (panicRoute.length > 1) {
             logMessage(`🛣️ ROUTE FOUND: ${panicRoute.length - 1} HOPS TO SAFETY`);
             isFollowingPanicRoute = true;

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE GHOST | Enhanced Evasion Protocol</title>
+    
+    <!-- Design System -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Bokeh -->
+    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.3.0.min.js"></script>
+    
+    <!-- deck.gl -->
+    <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+    
+    <!-- PyScript -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2023.11.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2023.11.1/core.js"></script>
+
+    <style>
+        :root {
+            --neon-green: #00ff95;
+            --neon-red: #ff3e3e;
+            --neon-blue: #00f2ff;
+            --bg-dark: #0a0e14;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        #deck-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #hud-container {
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(10, 14, 20, 0.85);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+            padding: 15px;
+            border-radius: 4px;
+            backdrop-filter: blur(8px);
+            transition: 0.3s;
+        }
+
+        .panel:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+        }
+
+        #status-panel {
+            width: 250px;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        #threat-panel {
+            width: 200px;
+            text-align: right;
+            border-right: 4px solid var(--neon-red);
+        }
+
+        #logs-panel {
+            width: 450px;
+            height: 180px;
+            font-size: 0.85em;
+        }
+
+        #log-content {
+            color: var(--neon-green);
+            height: 140px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-blue) transparent;
+        }
+
+        #bokeh-chart-panel {
+            width: 320px;
+            height: 180px;
+            margin-top: 15px;
+        }
+
+        .panic-btn-py {
+            pointer-events: auto;
+            background: linear-gradient(45deg, #ff3e3e, #8b0000);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 62, 62, 0.4);
+            transition: 0.2s;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+        }
+
+        .panic-btn-py:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px rgba(255, 62, 62, 0.7);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: var(--neon-green);
+            font-family: 'Orbitron', sans-serif;
+            flex-direction: column;
+        }
+
+        .status-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-top: 5px;
+            letter-spacing: 2px;
+        }
+
+        .threat-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--neon-red);
+        }
+    </style>
+</head>
+<body class="safe-state">
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div style="margin-top:20px; letter-spacing: 5px;">SYNCING WITH QUANTUM LAYER...</div>
+    </div>
+
+    <div class="scanline"></div>
+    
+    <div id="deck-container"></div>
+
+    <main id="hud-container">
+        <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="logo">
+                <span class="glitch" data-text="THE GHOST">THE GHOST</span>
+                <span class="sub-logo">ENHANCED PROTOCOL v2.2.0</span>
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <div id="status-panel" class="panel">
+                    <div style="font-size: 0.7em; color: var(--neon-blue);">TARGET SECTOR STATUS</div>
+                    <div id="status-value" class="status-value">CALCULATING...</div>
+                </div>
+                <div id="threat-panel" class="panel">
+                    <div style="font-size: 0.7em; color: var(--neon-red);">NEURAL THREAT</div>
+                    <div id="threat-value" class="threat-display">0%</div>
+                </div>
+            </div>
+        </header>
+
+        <section style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div id="left-controls">
+                <div id="logs-panel" class="panel">
+                    <div style="font-size: 0.7em; color: var(--neon-blue); margin-bottom: 8px;">LIVE TAC-FEED</div>
+                    <div id="log-content"></div>
+                </div>
+                <div id="bokeh-chart-panel" class="panel">
+                    <div id="bokeh-chart" class="bokeh-target"></div>
+                </div>
+            </div>
+
+            <div id="right-controls" style="display: flex; flex-direction: column; align-items: flex-end;">
+                <button id="panic-btn-py" class="panic-btn-py" py-click="trigger_panic">
+                    EVASION
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <py-config>
+        packages = ["bokeh", "pandas"]
+        [[fetch]]
+        files = ["data.json", "main.py"]
+    </py-config>
+
+    <script type="py" src="./main.py" config="./py-config"></script>
+
+    <script>
+        window.onGhostMove = (lng, lat) => {
+            if (window.deckInstance) {
+                const currentView = window.deckInstance.viewState;
+                window.deckInstance.setProps({
+                    initialViewState: {
+                        ...currentView,
+                        longitude: lng,
+                        latitude: lat,
+                        transitionDuration: 1000,
+                        transitionInterpolator: new deck.LinearInterpolator(['longitude', 'latitude'])
+                    }
+                });
+            }
+        };
+
+        window.updateDeckLayers = (nodesJson, linksJson, currentNodeId) => {
+            const nodes = JSON.parse(nodesJson);
+            const links = JSON.parse(linksJson);
+            const {LineLayer, ScatterplotLayer, TextLayer} = deck;
+
+            const layers = [
+                // Links Layer - Differentiate between Physical Paths and Social/Prediction links
+                new LineLayer({
+                    id: 'links',
+                    data: links,
+                    getSourcePosition: d => [d.source_pos.x / 100, d.source_pos.y / 100],
+                    getTargetPosition: d => [d.target_pos.x / 100, d.target_pos.y / 100],
+                    getColor: d => {
+                        if (d.type === 'TARGETS') return [255, 62, 62, 200];
+                        if (d.type === 'APPEARS_IN') return [255, 140, 66, 150];
+                        if (d.type === 'KNOWS' || d.type === 'INTERACTS_WITH') return [187, 0, 255, 100];
+                        const r = d.riesgo || 0.5;
+                        return [255 * r, 255 * (1-r), 255 * (1-r), 180];
+                    },
+                    getWidth: d => {
+                        if (d.type === 'CONECTA_CON') return 2 + (1 - (d.riesgo || 0.5)) * 3;
+                        return 1;
+                    },
+                    dashJustified: true,
+                    pickable: true
+                }),
+                
+                // Nodes Layer - Differentiate between Citizens, Locations, and Visions
+                new ScatterplotLayer({
+                    id: 'nodes',
+                    data: nodes,
+                    getPosition: d => [d.x / 100, d.y / 100],
+                    getFillColor: d => {
+                        if (d.id === currentNodeId) return [0, 255, 149];
+                        if (d.type === 'vision') return [255, 62, 62, 200];
+                        if (d.type === 'citizen') return [187, 0, 255];
+                        const colors = {
+                            hideout: [0, 255, 149],
+                            bank: [255, 215, 0],
+                            police: [255, 62, 62],
+                            blindspot: [187, 0, 255],
+                            junction: [77, 171, 247]
+                        };
+                        return colors[d.type] || [0, 242, 255];
+                    },
+                    stroked: true,
+                    getLineColor: d => d.type === 'vision' ? [255, 255, 255, 255] : [255, 255, 255, 180],
+                    lineWidthMinPixels: 2,
+                    getRadius: d => {
+                        if (d.id === currentNodeId) return 12 + Math.sin(Date.now() / 200) * 2;
+                        if (d.type === 'vision') return 15 + Math.sin(Date.now() / 300) * 5;
+                        if (d.type === 'citizen') return 6;
+                        return 8;
+                    },
+                    updateTriggers: {
+                        getRadius: [Date.now()]
+                    },
+                    pickable: true
+                }),
+                
+                // Labels Layer
+                new TextLayer({
+                    id: 'labels',
+                    data: nodes,
+                    getPosition: d => [d.x / 100, d.y / 100],
+                    getText: d => d.name,
+                    getSize: d => (d.type === 'vision' || d.id === currentNodeId) ? 16 : 12,
+                    getAngle: 0,
+                    getTextAnchor: 'start',
+                    getAlignmentBaseline: 'center',
+                    getColor: d => d.type === 'vision' ? [255, 62, 62, 255] : [255, 255, 255, 200],
+                    getPixelOffset: [18, 0],
+                    fontFamily: 'Orbitron',
+                    fontWeight: 'bold'
+                })
+            ];
+
+            window.deckInstance.setProps({layers});
+        };
+    </script>
+</body>
+</html>
