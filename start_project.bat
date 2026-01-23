@@ -15,6 +15,14 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
+:: 1.1 Verificar si Python está instalado
+where python >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Python no está instalado o no está en el PATH.
+    pause
+    exit /b 1
+)
+
 :: 2. Levantar los contenedores
 echo [1/3] Levantando contenedores con Docker Compose...
 docker-compose up -d
@@ -25,9 +33,9 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: 3. Esperar a que Neo4j esté listo (aprox 20 seg)
-echo [2/3] Esperando a que Neo4j termine de arrancar (20 segundos)...
-timeout /t 20 /nobreak >nul
+:: 3. Esperar a que Neo4j esté listo (aprox 10 seg suele bastar para la API)
+echo [2/3] Esperando a que Neo4j termine de arrancar (15 segundos)...
+timeout /t 15 /nobreak >nul
 
 :: 4. Poblar la base de datos
 echo [3/3] Inicializando el grafo de la ciudad...
