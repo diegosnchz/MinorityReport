@@ -125,109 +125,124 @@
             border-color: #00ff00;
         }
 
-        #graph-container {
-            width: 100vw;
-            height: 100vh;
+        /* LAYOUT REFACTOR */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 20;
+            pointer-events: none;
+            /* Let clicks pass through, but buttons will enable pointer-events */
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .nav-buttons {
+            pointer-events: auto;
+            display: flex;
         }
 
         #ui-layer {
             position: absolute;
-            top: 20px;
+            top: 100px;
+            /* Below top bar */
             left: 20px;
+            bottom: 20px;
             z-index: 10;
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid #00ff00;
             padding: 20px;
             width: 300px;
+            display: flex;
+            flex-direction: column;
         }
 
-        h1 {
-            margin: 0 0 10px 0;
-            font-size: 1.2em;
-            text-transform: uppercase;
-            border-bottom: 1px solid #00ff00;
-            padding-bottom: 5px;
+        #vision-feed {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 5px;
         }
 
-        .vision-card {
-            border: 1px solid #333;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #0a0a0a;
-            cursor: pointer;
+        /* Scrollbar styling for cyber look */
+        #vision-feed::-webkit-scrollbar {
+            width: 5px;
         }
 
-        .vision-card:hover {
-            border-color: #00ff00;
+        #vision-feed::-webkit-scrollbar-track {
+            background: #001100;
         }
 
-        .high-risk {
-            color: #ff0000;
-        }
-
-        .medium-risk {
-            color: #ffa500;
+        #vision-feed::-webkit-scrollbar-thumb {
+            background: #00ff00;
         }
 
         button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 10px 15px;
             cursor: pointer;
-            font-family: monospace;
+            font-family: 'Inter', monospace;
             font-weight: bold;
-        }
-
-        .btn-green {
-            background: #333;
-            color: #00ff00;
             border: 1px solid #00ff00;
+            background: rgba(0, 20, 0, 0.8);
+            color: #00ff00;
+            margin-left: 10px;
+            transition: all 0.2s;
         }
 
-        .btn-green:hover {
-            background: #004400;
-        }
-
-        .btn-red {
-            background: #aa0000;
-            color: white;
-            border: 1px solid #ff0000;
-        }
-
-        .btn-red:hover {
-            background: #ff0000;
-        }
-
-        .btn-blue {
-            background: #0000aa;
-            color: white;
-            border: 1px solid #00aaff;
-        }
-
-        .btn-blue:hover {
-            background: #00aaff;
+        button:hover {
+            background: #00ff00;
+            color: black;
+            box-shadow: 0 0 15px #00ff00;
         }
     </style>
 </head>
 
 <body>
+    <!-- TOP NAVIGATION BAR -->
+    <div class="top-bar">
+        <div class="brand">
+            <i class="fas fa-network-wired"></i> GNN CORE <span style="opacity: 0.5; font-size: 0.8em;">| MAIN
+                NODE</span>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="window.location.href='/analytics-dashboard'">
+                <i class="fas fa-chart-pie"></i> ANALYTICS
+            </button>
+            <button onclick="window.location.href='/map-view'">
+                <i class="fas fa-map-marked-alt"></i> COMMAND MAP
+            </button>
+        </div>
+    </div>
+
+    <!-- SIDE PANEL (VISIONS ONLY) -->
     <div id="ui-layer">
-        <h1>Active Visions</h1>
+        <h1 style="margin: 0; font-size: 1.2em; border-bottom: 1px solid #00ff00; padding-bottom: 10px;">
+            <i class="fas fa-eye"></i> ACTIVE VISIONS
+        </h1>
+
         <div id="vision-feed">
             No active threats detected.
         </div>
 
-        <div style="margin-top: 20px;">
-            <button class="btn-green" onclick="window.location.href='/analytics-dashboard'">
-                VIEW ANALYTICS DIVISION
-            </button>
-
-            <button class="btn-blue" onclick="window.location.href='/map-view'">
-                <i class="fas fa-map-marked-alt"></i> COMMAND MAP
-            </button>
-
-            <button class="btn-red" onclick="triggerSimulation()">
-                RUN SIMULATION STEP
+        <div style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+            <!-- Keep Simulation button here for quick access or move to top? Let's keep it here but styled smaller or moved. 
+                  Actually, moving Simulation to side panel (Action) makes sense. -->
+            <button style="width: 100%; margin: 0; background: #aa0000; border-color: #ff0000; color: white;"
+                onclick="triggerSimulation()">
+                <i class="fas fa-bolt"></i> RUN SIMULATION
             </button>
         </div>
     </div>
