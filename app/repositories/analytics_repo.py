@@ -196,4 +196,63 @@ class AnalyticsRepository:
             "avg_confidence": data['avg_confidence'] or 0.0
         }
 
+    async def get_predictive_heatmap(self) -> str:
+        """
+        KPI 6: HoloViz Heatmap (Interactive).
+        Devuelve HTML crudo para ser embebido en un iframe.
+        """
+        import numpy as np
+        import hvplot.pandas
+        import panel as pn
+        import io
+        from bokeh.resources import INLINE
+        
+        # Necesario para inicializar bokeh en el thread
+        try:
+            pn.extension('bokeh')
+        except:
+            pass
+
+        # Simulate Data: 5 Districts x 24 Hours
+        districts = ['Downtown', 'SubwayStation', 'IndustrialZone', 'Residential', 'Park']
+        hours = list(range(24))
+        
+        data = []
+        for d in districts:
+            for h in hours:
+                base_risk = np.random.rand() * 0.3
+                if h < 6 or h > 18:
+                    base_risk += 0.4
+                if d in ['Downtown', 'SubwayStation']:
+                    base_risk += 0.2
+                base_risk += (np.random.rand() - 0.5) * 0.1
+                
+                data.append({
+                    'District': d,
+                    'Hour': h,
+                    'Risk': min(max(base_risk, 0.0), 1.0)
+                })
+        
+        df = pd.DataFrame(data)
+        
+        # Create Heatmap
+        heatmap = df.hvplot.heatmap(
+            x='Hour', y='District', C='Risk', 
+            cmap='Plasma', 
+            title='24h Predictive Risk Heatmap',
+            width=700, height=450,
+            grid=True
+        ).opts(
+            bgcolor='rgba(0,0,0,0)',
+            toolbar='above',
+            fontsize={'title': '12pt', 'labels': '10pt', 'xticks': '8pt', 'yticks': '8pt'}
+        )
+        
+        # Generar HTML via save() a buffer
+        sio = io.StringIO()
+        # embed=True incluye los datos JSON dentro del HTML
+        pn.pane.HoloViews(heatmap).save(sio, embed=True, resources=INLINE)
+        sio.seek(0)
+        return sio.read()
+
 analytics_repo = AnalyticsRepository()

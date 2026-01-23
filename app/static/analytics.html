@@ -283,10 +283,31 @@
       <div class="chart-card" style="grid-column: span 2;">
         <div class="chart-header">
           <div class="chart-title">Social Contagion Analysis (Network Influence)</div>
-          <i class="fas fa-project-diagram text-red"></i>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="riskFilter"
+              style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">
+              <option value="ALL">All Risk Levels</option>
+              <option value="CRITICAL">Critical Only (>0.8)</option>
+              <option value="ELEVATED">Elevated Only (0.5-0.8)</option>
+              <option value="STABLE">Stable Only (<0.5)< /option>
+            </select>
+            <i class="fas fa-project-diagram text-red"></i>
+          </div>
         </div>
         <div class="chart-container">
           <canvas id="socialChart"></canvas>
+        </div>
+      </div>
+
+      <!-- HoloViz Advanced KPI -->
+      <div class="chart-card" style="grid-column: span 2; height: 600px;">
+        <div class="chart-header">
+          <div class="chart-title">Predictive Risk Accuracy (HoloViz + Bokeh)</div>
+          <i class="fas fa-chart-area text-blue"></i>
+        </div>
+        <div class="chart-container text-center"
+          style="border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2);">
+          <iframe src="/analytics/advanced-kpi" width="100%" height="100%" frameBorder="0" scrolling="no"></iframe>
         </div>
       </div>
 
@@ -389,7 +410,8 @@
         });
 
         // Social Scatter
-        new Chart(document.getElementById('socialChart'), {
+        const socialCtx = document.getElementById('socialChart');
+        let socialChart = new Chart(socialCtx, {
           type: 'scatter',
           data: {
             datasets: [{
@@ -409,6 +431,21 @@
             },
             plugins: { legend: { display: false } }
           }
+        });
+
+        // Social Filter Logic
+        document.getElementById('riskFilter').addEventListener('change', (e) => {
+          const filter = e.target.value;
+          const filteredData = social.filter(d => {
+            if (filter === 'CRITICAL') return d.risk > 0.8;
+            if (filter === 'ELEVATED') return d.risk > 0.5 && d.risk <= 0.8;
+            if (filter === 'STABLE') return d.risk <= 0.5;
+            return true; // ALL
+          });
+
+          socialChart.data.datasets[0].data = filteredData.map(d => ({ x: d.degree, y: d.risk }));
+          socialChart.data.datasets[0].backgroundColor = filteredData.map(d => d.risk > 0.8 ? '#f87171' : d.risk > 0.5 ? '#fbbf24' : '#4ade80');
+          socialChart.update();
         });
 
         // Remove Loader

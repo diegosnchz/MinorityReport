@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.responses import HTMLResponse
 from app.repositories.analytics_repo import analytics_repo
 
 router = APIRouter(prefix="/analytics", tags=["Analytics & KPIs"])
@@ -27,3 +28,8 @@ async def get_headline_stats():
 async def get_system_kpis():
     """Devuelve métricas globales de rendimiento."""
     return await analytics_repo.get_system_stats()
+
+@router.get("/advanced-kpi", response_class=HTMLResponse)
+async def get_advanced_kpi():
+    """Devuelve el HTML del Heatmap interactivo de HoloViz."""
+    return await analytics_repo.get_predictive_heatmap()
