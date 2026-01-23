@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.evasion.services.routing_service import routing_service
 from app.evasion.models.hybrid_engine import hybrid_engine
 import pandas as pd
+import numpy as np
 
 router = APIRouter(prefix="/evasion", tags=["Evasion Protocol"])
 
