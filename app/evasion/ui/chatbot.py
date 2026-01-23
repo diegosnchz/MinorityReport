@@ -131,7 +131,7 @@ class ChatbotInterface:
     def view(self):
         # Header
         header = pn.Row(
-            pn.pane.Markdown("# 🛡️ TACTICAL ASSISTANT", styles={'color': '#00fff2', 'font-family': 'Orbitron'}),
+            pn.pane.Markdown("# TACTICAL ASSISTANT", styles={'color': '#00fff2', 'font-family': 'Orbitron'}),
             align="center"
         )
         

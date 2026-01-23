@@ -31,7 +31,7 @@ class Neo4jManager:
                     )
                     # Verify connectivity
                     await self._driver.verify_connectivity()
-                    logger.info(f"🔌 Conectado a Neo4j en {self._uri}")
+                    logger.info(f"Conectado a Neo4j en {self._uri}")
                     return
                 except Exception as e:
                     logger.warning(f"Intento {attempt+1}/{max_retries} fallido al conectar con Neo4j: {e}")
@@ -41,7 +41,7 @@ class Neo4jManager:
                     if attempt < max_retries - 1:
                         await asyncio.sleep(5)  # Esperar 5 segundos antes de reintentar
                     else:
-                        logger.error("❌ Fallo crítico al conectar con Neo4j tras varios intentos.")
+                        logger.error("Fallo crítico al conectar con Neo4j tras varios intentos.")
                         raise e
 
     async def close(self):

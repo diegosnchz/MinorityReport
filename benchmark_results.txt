@@ -9,4 +9,4 @@ I/O (100k rows)           | 0.02607      | 0.01724      |      1.5x
 ============================================================
 
 VERDICT:
-⚠️ HPC optimization failed. Check Numba/Arrow configuration.
+HPC optimization failed. Check Numba/Arrow configuration.

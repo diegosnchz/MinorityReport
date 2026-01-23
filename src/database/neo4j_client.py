@@ -48,14 +48,14 @@ class Neo4jClient:
             try:
                 self._driver = GraphDatabase.driver(self.uri, auth=self.auth)
                 self.verify_connection()
-                logger.info("✅ Connected to Neo4j successfully.")
+                logger.info("Connected to Neo4j successfully.")
                 return
             except (ServiceUnavailable, AuthError, Exception) as e:
                 logger.warning(f"Connection attempt {attempt + 1}/{max_retries} failed: {e}")
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
                 else:
-                    logger.error("❌ Failed to connect to Neo4j after multiple attempts.")
+                    logger.error("Failed to connect to Neo4j after multiple attempts.")
                     raise e
 
     def verify_connection(self) -> None:
@@ -115,7 +115,7 @@ class Neo4jClient:
         try:
             with self._driver.session() as session:
                 session.run(query, batch=predictions_list)
-                logger.info(f"⚡ {len(predictions_list)} prediction(s) inserted into Neo4j.")
+                logger.info(f"{len(predictions_list)} prediction(s) inserted into Neo4j.")
         except Exception as e:
             logger.error(f"Failed to insert predictions: {e}")
             raise

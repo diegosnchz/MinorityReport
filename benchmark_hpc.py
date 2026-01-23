@@ -86,9 +86,9 @@ def print_results(t_legacy, t_hpc, t_pandas, t_arrow):
     output.append("="*60)
     output.append("\nVERDICT:")
     if speedup_compute > 10 and speedup_io > 5:
-        output.append("✅ HPC Architecture VALIDATED. System is ready for production.")
+        output.append("HPC Architecture VALIDATED. System is ready for production.")
     else:
-        output.append("⚠️ HPC optimization failed. Check Numba/Arrow configuration.")
+        output.append("HPC optimization failed. Check Numba/Arrow configuration.")
     
     report = "\n".join(output)
     print(report)
