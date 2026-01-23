@@ -6,13 +6,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Crime Division | Dashboard</title>
     <script src="//unpkg.com/3d-force-graph"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             background-color: #000;
             color: #00ff00;
-            font-family: monospace;
+            font-family: 'Inter', monospace;
             overflow: hidden;
+        }
+
+        /* CHATBOT STYLES (MATCHING MAP VIEW) */
+        .chat-fab {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: #00ff00;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        .chat-fab:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 100px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            background: rgba(0, 20, 0, 0.95);
+            border: 1px solid #00ff00;
+            backdrop-filter: blur(16px);
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 1000;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-header {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 15px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #00ff00;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .msg.system {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid #00ff00;
+            color: #ccffcc;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(0, 255, 0, 0.2);
+            border-right: 3px solid #00ff00;
+            color: #00ff00;
+            text-align: right;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            border-radius: 4px;
+            padding: 8px;
+            color: #00ff00;
+            font-family: monospace;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #00ff00;
         }
 
         #graph-container {
@@ -113,11 +223,34 @@
             </button>
 
             <button class="btn-blue" onclick="window.location.href='/map-view'">
-                VIEW GEOSPATIAL MAP
+                <i class="fas fa-map-marked-alt"></i> COMMAND MAP
             </button>
 
             <button class="btn-red" onclick="triggerSimulation()">
                 RUN SIMULATION STEP
+            </button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Chatbot Integration -->
+    <div class="chat-fab" onclick="toggleChat()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <span><i class="fas fa-brain"></i> PRECOG ASSISTANT</span>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
+        </div>
+        <div class="chat-messages" id="chat-feed">
+            <div class="msg system">GNN Neural Link Active.<br><i>System ready for inquiries.</i></div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Query Neural Net..."
+                onkeypress="handleKeyPress(event)">
+            <button class="btn-green" style="width: auto; padding: 8px 12px; margin-bottom:0;" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
             </button>
         </div>
     </div>
@@ -174,6 +307,68 @@
             await fetch('/simulation/step', { method: 'POST' });
             fetchGraphData();
             fetchActiveVisions();
+            addSystemMessage("Simulation Step Complete. Graph updated.");
+        }
+
+        /* CHATBOT LOGIC */
+        function toggleChat() {
+            const w = document.getElementById('chat-window');
+            w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function addSystemMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg system">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg user">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            addUserMessage(txt);
+            input.value = '';
+
+            const lower = txt.toLowerCase();
+
+            // 1. Evasion Intent
+            if (lower.includes("route") || lower.includes("escape")) {
+                addSystemMessage("Redirecting to Command Map for Evasion Protocol...");
+                setTimeout(() => window.location.href = '/map-view', 1500);
+                return;
+            }
+
+            // 2. Explanation Intent
+            if (lower.includes("why") || lower.includes("danger")) {
+                addSystemMessage("Accessing XAI Subsystem...");
+                try {
+                    const res = await fetch("/evasion/explain-risk?hour=2&weather=Clear&patrols=5");
+                    const data = await res.json();
+
+                    const responseHTML = `
+                        <strong>SHAP Analysis:</strong><br>
+                        Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
+                        Critical Factors: ${data.top_factors.join(", ")}
+                    `;
+                    addSystemMessage(responseHTML);
+                } catch (e) {
+                    addSystemMessage("Error connecting to Forensic Module.");
+                }
+                return;
+            }
+
+            addSystemMessage("Command not recognized. Protocols: 'Escape', 'Why is this dangerous?'.");
         }
 
         fetchGraphData();

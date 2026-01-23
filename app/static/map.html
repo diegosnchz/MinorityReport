@@ -187,6 +187,114 @@
                 opacity: 1;
             }
         }
+
+        /* CHATBOT STYLES */
+        .chat-fab {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        .chat-fab:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 100px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-blue);
+            backdrop-filter: blur(16px);
+            border-radius: 12px;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 1000;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-header {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 15px;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .msg.system {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(56, 189, 248, 0.2);
+            border-right: 3px solid var(--accent-blue);
+            color: var(--accent-blue);
+            text-align: right;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 8px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
     </style>
 </head>
 
@@ -204,9 +312,10 @@
                     SECTOR</span>
             </div>
             <div>
-                <button class="control-btn secondary" style="width: auto; margin-right: 10px;"
+                <button class="control-btn secondary"
+                    style="width: auto; margin-right: 10px; z-index: 100; position: relative;"
                     onclick="window.location.href='/'">
-                    <i class="fas fa-network-wired"></i> NEURAL NET
+                    <i class="fas fa-project-diagram"></i> GNN NETWORK
                 </button>
                 <button class="control-btn secondary" style="width: auto;"
                     onclick="window.location.href='/analytics-dashboard'">
@@ -238,7 +347,33 @@
             </div>
         </div>
 
-        <div class="status-bar glass-panel">
+        <!-- Replaced Status Bar with Chatbot UI -->
+        <!-- Chat FAB -->
+        <div class="chat-fab" onclick="toggleChat()">
+            <i class="fas fa-robot"></i>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <span><i class="fas fa-brain"></i> PRECOG ASSISTANT</span>
+                <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
+            </div>
+            <div class="chat-messages" id="chat-feed">
+                <div class="msg system">Neural Link Established. System ready for inquiries.<br><i>Try: "Why is this
+                        zone dangerous?"</i></div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Type command..."
+                    onkeypress="handleKeyPress(event)">
+                <button class="control-btn" style="width: auto; padding: 8px 12px; margin-top:0;"
+                    onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="status-bar glass-panel" style="right: 120px;">
             <i class="fas fa-map-marked-alt"></i> Viewing: <b>Madrid Central</b> | Lat: 40.41 | Lon: -3.70
         </div>
     </div>
@@ -383,8 +518,75 @@
             try {
                 await fetch('/simulation/step', { method: 'POST' });
                 initMap();
+                addSystemMessage("Simulation Step Complete. Data refreshed.");
             } catch (e) { console.error(e); }
             btn.innerHTML = '<i class="fas fa-bolt"></i> RUN SIMULATION STEP';
+        }
+
+        /* CHATBOT LOGIC */
+        function toggleChat() {
+            const w = document.getElementById('chat-window');
+            w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function addSystemMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg system">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg user">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            addUserMessage(txt);
+            input.value = '';
+
+            // Intent Recognition
+            const lower = txt.toLowerCase();
+
+            // 1. Evasion Intent
+            if (lower.includes("route") || lower.includes("escape") || lower.includes("path")) {
+                addSystemMessage("Acknowledged. Calculating optimal evasion route via HPC...");
+                triggerEscapeRouting();
+                return;
+            }
+
+            // 2. Explanation Intent
+            if (lower.includes("why") || lower.includes("danger") || lower.includes("risk")) {
+                addSystemMessage("Accessing XAI Subsystem...");
+                try {
+                    // Fetch real explanation from backend
+                    // Dummy params for demo
+                    const res = await fetch("/evasion/explain-risk?hour=2&weather=Clear&patrols=5");
+                    const data = await res.json();
+
+                    const responseHTML = `
+                        <strong>SHAP Analysis Detected:</strong><br>
+                        Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
+                        Critical Factors: ${data.top_factors.join(", ")}<br>
+                        <span style="font-size:0.8em; color:var(--accent-green);">${data.shap_summary}</span>
+                    `;
+                    addSystemMessage(responseHTML);
+                } catch (e) {
+                    addSystemMessage("Error connecting to Forensic Module.");
+                }
+                return;
+            }
+
+            // 3. Fallback
+            addSystemMessage("Command not recognized. Protocols: 'Generate Route', 'Why is this dangerous?'.");
         }
 
         initMap();
