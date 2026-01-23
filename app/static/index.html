@@ -348,10 +348,20 @@
     <script>
         const graphElem = document.getElementById('graph-container');
         let Graph = ForceGraph3D()(graphElem)
-            .backgroundColor('#0f172a')
-            .nodeAutoColorBy('group')
-            .nodeLabel(node => `${node.label} (${node.type})`)
+            .backgroundColor('#02040a') // Deepest Slate/Black for max contrast
+            .nodeColor(node => {
+                // High Contrast Palette
+                const g = node.group ? node.group.toLowerCase() : '';
+                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Red
+                if (g === 'yellow' || g === 'location') return '#fbbf24'; // Amber
+                if (g === 'blue' || g === 'citizen') return '#38bdf8'; // Cyan
+                if (g === 'green' || g === 'safe') return '#4ade80'; // Green
+                return '#a855f7'; // Purple (Default/Unknown)
+            })
+            .nodeLabel(node => `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.label} (${node.type || 'Node'})</span>`)
             .linkWidth(link => link.value > 0.5 ? 2 : 1)
+            .linkColor(() => '#ffffff') // White links for high visibility against dark bg
+            .linkOpacity(0.2) // Slight transparency to avoid visual noise but keep connections visible
             .onNodeClick(node => {
                 const distance = 40;
                 const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
