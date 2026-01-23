@@ -9,22 +9,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-red: #f87171;
+            --accent-green: #4ade80;
+            --accent-purple: #a855f7;
+        }
+
         body {
             margin: 0;
-            background-color: #000;
-            color: #00ff00;
-            font-family: 'Inter', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
             overflow: hidden;
         }
 
-        /* CHATBOT STYLES (MATCHING MAP VIEW) */
+        /* CHATBOT STYLES (MATCHING ANALYTICS THEME) */
         .chat-fab {
             position: absolute;
             bottom: 30px;
             right: 40px;
             width: 60px;
             height: 60px;
-            background: #00ff00;
+            background: var(--accent-blue);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -32,7 +44,7 @@
             font-size: 24px;
             color: #000;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
             transition: all 0.3s ease;
             pointer-events: auto;
             z-index: 1000;
@@ -48,8 +60,8 @@
             right: 40px;
             width: 350px;
             height: 500px;
-            background: rgba(0, 20, 0, 0.95);
-            border: 1px solid #00ff00;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-blue);
             backdrop-filter: blur(16px);
             border-radius: 12px;
             display: none;
@@ -61,14 +73,14 @@
         }
 
         .chat-header {
-            background: rgba(0, 255, 0, 0.1);
+            background: rgba(56, 189, 248, 0.1);
             padding: 15px;
-            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
             font-weight: bold;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #00ff00;
+            color: var(--accent-blue);
         }
 
         .chat-messages {
@@ -91,15 +103,15 @@
         .msg.system {
             align-self: flex-start;
             background: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid #00ff00;
-            color: #ccffcc;
+            border-left: 3px solid var(--accent-blue);
+            color: var(--text-primary);
         }
 
         .msg.user {
             align-self: flex-end;
-            background: rgba(0, 255, 0, 0.2);
-            border-right: 3px solid #00ff00;
-            color: #00ff00;
+            background: rgba(56, 189, 248, 0.2);
+            border-right: 3px solid var(--accent-blue);
+            color: var(--accent-blue);
             text-align: right;
         }
 
@@ -113,16 +125,16 @@
         .chat-input {
             flex-grow: 1;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             padding: 8px;
-            color: #00ff00;
-            font-family: monospace;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
         }
 
         .chat-input:focus {
             outline: none;
-            border-color: #00ff00;
+            border-color: var(--accent-blue);
         }
 
         /* LAYOUT REFACTOR - CLEAN & SPACIOUS */
@@ -138,24 +150,32 @@
             bottom: 20px;
             width: 350px;
             z-index: 10;
-            background: rgba(0, 5, 0, 0.9);
-            border: 1px solid #00ff00;
-            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
             padding: 25px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         h1 {
             margin: 0;
             font-size: 1.4em;
             text-transform: uppercase;
-            border-bottom: 2px solid #00ff00;
+            border-bottom: 2px solid var(--accent-blue);
             padding-bottom: 15px;
             letter-spacing: 2px;
-            text-shadow: 0 0 5px #00ff00;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h1 i {
+            color: var(--accent-blue);
         }
 
         #vision-feed {
@@ -165,29 +185,30 @@
         }
 
         .vision-card {
-            border: 1px solid #333;
+            border: 1px solid var(--card-border);
             margin-bottom: 15px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--accent-red);
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .vision-card:hover {
-            border-color: #00ff00;
-            background: rgba(0, 255, 0, 0.1);
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.08);
             transform: translateX(5px);
         }
 
         /* Risk Levels */
         .high-risk {
-            color: #ff4444;
+            color: var(--accent-red);
             font-weight: bold;
         }
 
         .medium-risk {
-            color: #ffa500;
+            color: var(--accent-green);
         }
 
         /* Scrollbar styling */
@@ -196,11 +217,11 @@
         }
 
         #vision-feed::-webkit-scrollbar-track {
-            background: rgba(0, 255, 0, 0.05);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         #vision-feed::-webkit-scrollbar-thumb {
-            background: #00ff00;
+            background: var(--accent-blue);
             border-radius: 3px;
         }
 
@@ -208,7 +229,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--card-border);
             padding-top: 20px;
         }
 
@@ -216,12 +237,13 @@
             width: 100%;
             padding: 14px;
             cursor: pointer;
-            font-family: 'Inter', monospace;
+            font-family: 'Inter', sans-serif;
             font-weight: 600;
             font-size: 0.95rem;
-            border: 1px solid #00ff00;
-            background: rgba(0, 30, 0, 0.6);
-            color: #00ff00;
+            border: none;
+            background: var(--accent-blue);
+            color: #0f172a;
+            border-radius: 6px;
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -234,26 +256,36 @@
         }
 
         button:hover {
-            background: #00ff00;
-            color: black;
-            box-shadow: 0 0 15px #00ff00;
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
         .btn-alert {
-            border-color: #ff0000;
-            color: #ff4444;
+            background: var(--accent-red);
+            color: white;
         }
 
         .btn-alert:hover {
-            background: #ff0000;
-            color: white;
-            box-shadow: 0 0 15px #ff0000;
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-blue);
         }
 
         .btn-green {
-            background: #333;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            background: var(--accent-blue);
+            /* Using Blue for Chat send to match theme */
+            color: #000;
         }
     </style>
 </head>
@@ -262,22 +294,24 @@
     <!-- SIDE PANEL (UNIFIED) -->
     <div id="ui-layer">
         <div>
-            <h1 style="display: flex; align-items: center; gap: 10px;">
+            <h1>
                 <i class="fas fa-network-wired"></i> GNN MAIN
             </h1>
-            <div style="font-size: 0.8em; color: #888; margin-top: 5px;">MADRID SECTOR | LIVE FEED</div>
+            <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">MADRID SECTOR | LIVE FEED
+            </div>
         </div>
 
         <div id="vision-feed">
-            <div style="padding: 20px; text-align: center; color: #666;">Initializing Neural Link...</div>
+            <div style="padding: 20px; text-align: center; color: var(--text-secondary);">Initializing Neural Link...
+            </div>
         </div>
 
         <div class="nav-section">
-            <button onclick="window.location.href='/analytics-dashboard'">
+            <button class="btn-secondary" onclick="window.location.href='/analytics-dashboard'">
                 <i class="fas fa-chart-pie"></i> VIEW ANALYTICS
             </button>
 
-            <button onclick="window.location.href='/map-view'">
+            <button class="btn-secondary" onclick="window.location.href='/map-view'">
                 <i class="fas fa-map-marked-alt"></i> COMMAND MAP
             </button>
 
@@ -314,7 +348,7 @@
     <script>
         const graphElem = document.getElementById('graph-container');
         let Graph = ForceGraph3D()(graphElem)
-            .backgroundColor('#000000')
+            .backgroundColor('#0f172a')
             .nodeAutoColorBy('group')
             .nodeLabel(node => `${node.label} (${node.type})`)
             .linkWidth(link => link.value > 0.5 ? 2 : 1)

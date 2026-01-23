@@ -148,14 +148,17 @@
         }
 
         .control-btn.secondary {
-            background: transparent;
-            border: 1px solid var(--accent-blue);
-            color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
         }
 
-        .control-btn:hover {
-            opacity: 0.9;
+        .control-btn.secondary:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.08);
         }
+
 
         .status-bar {
             position: absolute;
