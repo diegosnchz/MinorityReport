@@ -2,7 +2,17 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.core.database import db_manager
 from app.core.ai_engine import precog_system
-from app.routers import predictions, citizens, locations, crimes, visions, simulation, analytics, map_router, evasion_router
+from app.routers import (
+    predictions, 
+    citizens, 
+    locations, 
+    crimes, 
+    visions, 
+    simulation, 
+    analytics, 
+    map_router, 
+    evasion_router
+)
 import numpy as np
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
