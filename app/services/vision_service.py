@@ -52,6 +52,7 @@ class VisionService:
                 "group": node['group'],
                 "label": node.get('label') or node.get('name'),
                 "val": val, # Tamaño del nodo en la UI
+                "in_analysis": node.get('in_analysis', True),
                 "info": node # Metadatos extra para el tooltip
             })
             seen_nodes.add(node['id'])

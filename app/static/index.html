@@ -349,8 +349,12 @@
         const graphElem = document.getElementById('graph-container');
         let Graph = ForceGraph3D()(graphElem)
             .backgroundColor('#02040a') // Deepest Slate/Black for max contrast
+            .nodeRelSize(6) // Make spheres larger and more visible
             .nodeColor(node => {
-                // High Contrast Palette
+                // If not in analysis, use a muted color
+                if (node.in_analysis === false) return '#334155'; // Muted Slate Gray
+
+                // High Contrast Palette for Analysis Nodes
                 const g = node.group ? node.group.toLowerCase() : '';
                 if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Red
                 if (g === 'yellow' || g === 'location') return '#fbbf24'; // Amber
@@ -376,7 +380,12 @@
             try {
                 const res = await fetch('/visions/graph?limit=300');
                 const data = await res.json();
-                Graph.graphData(data);
+
+                // Only update if number of nodes changed to avoid constant resets
+                const currentData = Graph.graphData();
+                if (!currentData || currentData.nodes.length !== data.nodes.length) {
+                    Graph.graphData(data);
+                }
             } catch (e) { console.error("Error fetching graph:", e); }
         }
 
@@ -473,6 +482,7 @@
         fetchGraphData();
         fetchActiveVisions();
         setInterval(fetchActiveVisions, 5000);
+        setInterval(fetchGraphData, 30000); // Fetch graph only every 30s
     </script>
 </body>
 

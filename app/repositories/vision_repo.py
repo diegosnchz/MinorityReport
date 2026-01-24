@@ -141,34 +141,33 @@ class VisionRepository:
         for row in vision_results:
             v, c, l = row['v'], row['c'], row['l']
             
-            nodes[v['id']] = {"id": v['id'], "label": "Vision", "group": "red", "prob": v.get('probability', 0)}
-            nodes[c['id']] = {"id": c['id'], "label": "Citizen", "group": "blue", "name": c.get('name', 'Unknown')}
-            nodes[l['id']] = {"id": l['id'], "label": "Location", "group": "yellow", "name": l.get('name', 'Unknown')}
+            nodes[v['id']] = {"id": v['id'], "label": "Vision", "group": "red", "prob": v.get('probability', 0), "in_analysis": True}
+            nodes[c['id']] = {"id": c['id'], "label": "Citizen", "group": "blue", "name": c.get('name', 'Unknown'), "in_analysis": True}
+            nodes[l['id']] = {"id": l['id'], "label": "Location", "group": "yellow", "name": l.get('name', 'Unknown'), "in_analysis": True}
             
             links.append({"source": c['id'], "target": v['id'], "type": "APPEARS_IN"})
             links.append({"source": v['id'], "target": l['id'], "type": "TARGETS"})
 
         # 2. Fetch Social Background (The "City Web") - To populate graph when no visions exist
-        # We limit specific relationships to avoid overwhelming the browser
-        social_limit = 200 - len(links) # Balance load
-        if social_limit > 0:
-            social_query = """
-            MATCH (c1:Citizen)-[:KNOWS]->(c2:Citizen)
-            RETURN c1, c2
-            LIMIT $limit
-            """
-            social_results = await db_manager.query(social_query, {"limit": social_limit})
+        # We increase the limit to ensure background nodes are present for context
+        social_limit = 300 
+        social_query = """
+        MATCH (c1:Citizen)-[:KNOWS]->(c2:Citizen)
+        RETURN c1, c2
+        LIMIT $limit
+        """
+        social_results = await db_manager.query(social_query, {"limit": social_limit})
             
-            for row in social_results:
-                c1, c2 = row['c1'], row['c2']
-                
-                # Add nodes if they don't exist yet
-                if c1['id'] not in nodes:
-                    nodes[c1['id']] = {"id": c1['id'], "label": "Citizen", "group": "blue", "name": c1.get('name', 'Unknown')}
-                if c2['id'] not in nodes:
-                    nodes[c2['id']] = {"id": c2['id'], "label": "Citizen", "group": "blue", "name": c2.get('name', 'Unknown')}
-                
-                links.append({"source": c1['id'], "target": c2['id'], "type": "KNOWS"})
+        for row in social_results:
+            c1, c2 = row['c1'], row['c2']
+            
+            # Add nodes if they don't exist yet
+            if c1['id'] not in nodes:
+                nodes[c1['id']] = {"id": c1['id'], "label": "Citizen", "group": "blue", "name": c1.get('name', 'Unknown'), "in_analysis": False}
+            if c2['id'] not in nodes:
+                nodes[c2['id']] = {"id": c2['id'], "label": "Citizen", "group": "blue", "name": c2.get('name', 'Unknown'), "in_analysis": False}
+            
+            links.append({"source": c1['id'], "target": c2['id'], "type": "KNOWS"})
 
         return {
             "nodes": list(nodes.values()),
