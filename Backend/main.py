@@ -1,23 +1,34 @@
 # main.py
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from contextlib import asynccontextmanager
 from models import Alerta
 from executor import executor
-from sockets import manager  # Importamos el manager desde sockets.py
+from sockets import manager
 import asyncio
 
-app = FastAPI(title="The Evasion Protocol - Hive Core")
-
-@app.on_event("startup")
-async def startup_event():
-    """Arranca el worker cuando enciendes el servidor"""
+# --- DEFINICIÓN DEL CICLO DE VIDA (LIFESPAN) ---
+# Esto sustituye a los antiguos 'startup' y 'shutdown'
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    #  🟢 ZONA DE ARRANQUE
+    print("🚀 THE HIVE: Iniciando sistemas y Executor...")
     asyncio.create_task(executor.run_worker())
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """🛑 APAGADO CONTROLADO: Se ejecuta al pulsar Ctrl+C"""
-    print("\n🚨 Apagando sistema... Esperando a que el Executor termine...")
+    
+    yield  # <--- El servidor funciona aquí
+    
+    #  🔴 ZONA DE APAGADO
+    print("\n🛑 THE HIVE: Deteniendo sistemas...")
     await executor.stop_worker()
-    print("✅ Sistema apagado correctamente. ¡Hasta luego, Operador!")
+    print("✅ THE HIVE: Apagado completado.")
+
+# --- INICIALIZAMOS LA APP CON LIFESPAN ---
+app = FastAPI(
+    title="The Evasion Protocol - Hive Core",
+    lifespan=lifespan
+)
+
+# ❌ AQUÍ HE BORRADO LOS BLOQUES @app.on_event("startup") y ("shutdown") 
+# PORQUE YA ESTÁN DENTRO DE LIFESPAN. ¡NO LOS NECESITAS!
 
 @app.get("/")
 def read_root():

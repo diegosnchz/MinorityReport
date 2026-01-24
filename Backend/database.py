@@ -1,17 +1,18 @@
 # database.py
 from neo4j import GraphDatabase
 import os
+from dotenv import load_dotenv  # <--- IMPORTANTE
 
 class Neo4jProvider:
     def __init__(self):
         # 1. URI: Cambia 'bolt' por 'neo4j+s' y pon la dirección de tu nube
-        uri = os.getenv("NEO4J_URI", "neo4j+ssc://6ffb75ca.databases.neo4j.io")
+        uri = os.getenv("NEO4J_URI")
         
         # 2. USER: Normalmente sigue siendo 'neo4j' en AuraDB
-        user = os.getenv("NEO4J_USER", "neo4j")
+        user = os.getenv("NEO4J_USER")
         
         # 3. PASSWORD: Pega aquí la contraseña larga que te dio AuraDB al crear la cuenta
-        password = os.getenv("NEO4J_PASSWORD", "eJcc40rfUud7IbOLvgX87dsRyT-uhV1FG81v6OnOL7s")
+        password = os.getenv("NEO4J_PASSWORD")
         
         try:
             self.driver = GraphDatabase.driver(uri, auth=(user, password))
