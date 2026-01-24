@@ -2,7 +2,10 @@
 from neo4j import GraphDatabase
 import os
 from dotenv import load_dotenv  # <--- IMPORTANTE
+load_dotenv()
 
+uri = os.getenv("NEO4J_URI")
+print(f"👀 OJO: La URI que estoy leyendo es: '{uri}'")  # <--- AÑADE ESTO
 class Neo4jProvider:
     def __init__(self):
         # 1. URI: Cambia 'bolt' por 'neo4j+s' y pon la dirección de tu nube
