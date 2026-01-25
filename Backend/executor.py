@@ -1,12 +1,10 @@
-# executor.py
 import asyncio
 import logging
 from models import Alerta
 from database import db
 from ai_interface import ai_oracle
-from sockets import manager # Importamos el manager compartido
+from sockets import manager
 
-# Configuración de Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
@@ -15,7 +13,7 @@ logging.basicConfig(
 class CrisisExecutor:
     """
     Execution Core del sistema.
-    Gestiona la cola de alertas, persistencia, IA y notificaciones.
+    Cola FIFO + Persistencia + IA + Notificaciones.
     """
 
     def __init__(self):
@@ -24,14 +22,14 @@ class CrisisExecutor:
         self.last_computed_route = None
 
     async def add_alert(self, alerta: Alerta) -> None:
-        """Productor: Método rápido, no bloqueante."""
+        """Productor: rápido y no bloqueante."""
         if not self.is_running:
             logging.warning("⚠️ El sistema se está apagando, alerta rechazada.")
             return
 
         logging.info(
-            f"📥 ALERTA RECIBIDA | ladrón={alerta.ladron_id} "
-            f"ubicación={alerta.ubicacion_actual_id}"
+            f"📥 ALERTA RECIBIDA | ladron={alerta.ladron_id} "
+            f"ubicacion={alerta.ubicacion_actual_id} riesgo={alerta.nivel_riesgo}"
         )
         await self.queue.put(alerta)
 
@@ -41,53 +39,53 @@ class CrisisExecutor:
         logging.info("⚙️ EXECUTOR INICIADO | Esperando eventos...")
 
         while self.is_running or not self.queue.empty():
-            # Si estamos apagando (is_running=False), seguimos solo si quedan cosas en la cola
-            
             try:
-                # Esperamos una alerta con un timeout para poder revisar is_running periódicamente
-                # Si la cola está vacía y is_running es False, saldremos del loop
                 alerta: Alerta = await asyncio.wait_for(self.queue.get(), timeout=1.0)
             except asyncio.TimeoutError:
                 continue
-            
+            except asyncio.CancelledError:
+                logging.warning("🛑 Worker cancelado.")
+                break
+
             try:
                 await self._process_alert(alerta)
             except Exception as e:
                 logging.error(f"❌ ERROR PROCESANDO ALERTA: {e}")
             finally:
-                # Marcamos la tarea como completada para el shutdown
                 self.queue.task_done()
-        
+
         logging.info("✅ EXECUTOR DETENIDO: No quedan tareas pendientes.")
 
-    async def stop_worker(self):
+    async def stop_worker(self) -> None:
         """
         🛑 Graceful Shutdown:
-        Detiene la aceptación de nuevas tareas y espera a que terminen las actuales.
+        - deja de aceptar nuevas alertas
+        - espera a terminar cola
         """
         logging.warning("🛑 SEÑAL DE APAGADO RECIBIDA. Deteniendo Executor...")
         self.is_running = False
-        
+
         if not self.queue.empty():
             count = self.queue.qsize()
             logging.info(f"⏳ Esperando a que terminen {count} tareas pendientes...")
-            # Esperamos a que queue.task_done() sea llamado para cada item restante
             await self.queue.join()
-        
+
         logging.info("👋 Cola vacía. Executor listo para dormir.")
 
     async def _process_alert(self, alerta: Alerta) -> None:
         """Pipeline de procesamiento."""
-        
         logging.info(f"🔥 PROCESANDO | sector={alerta.ubicacion_actual_id}")
 
-        # 1️⃣ Persistencia (Neo4j)
-        # Nota: Asegúrate de tener la versión nueva de database.py con 'Onda Expansiva'
-        db.actualizar_riesgo_nodo(alerta.ubicacion_actual_id, alerta.nivel_riesgo)
+        # 1️⃣ Persistencia Neo4j (si tu driver es síncrono -> offload)
+        await asyncio.to_thread(
+            db.actualizar_riesgo_nodo,
+            alerta.ubicacion_actual_id,
+            alerta.nivel_riesgo
+        )
 
-        # 2️⃣ IA (Oráculo)
+        # 2️⃣ IA (Oráculo) - internamente ya offloadea la parte Neo4j
         ruta = await ai_oracle.calcular_ruta_escape(
-            alerta.ladron_id, 
+            alerta.ladron_id,
             alerta.ubicacion_actual_id
         )
         self.last_computed_route = ruta
@@ -95,19 +93,18 @@ class CrisisExecutor:
         logging.info(f"🧭 RUTA CALCULADA | destino={ruta.destino_seguro}")
 
         # 3️⃣ WebSocket (Push Notification)
-        if manager:
-            logging.info(f"⚡ WEBSOCKET | Notificando a {alerta.ladron_id}...")
-            await manager.send_personal_message(
-                {
-                    "tipo": "RUTA_OPTIMA",
-                    "destino": ruta.destino_seguro,
-                    "nodos": ruta.camino_nodos,
-                    "probabilidad": ruta.probabilidad_exito
-                },
-                alerta.ladron_id
-            )
+        logging.info(f"⚡ WEBSOCKET | Notificando a {alerta.ladron_id}...")
+        await manager.send_personal_message(
+            {
+                "tipo": "RUTA_OPTIMA",
+                "destino": ruta.destino_seguro,
+                "nodos": ruta.camino_nodos,
+                "probabilidad": ruta.probabilidad_exito
+            },
+            alerta.ladron_id
+        )
 
-        # 4️⃣ Gossip
+        # 4️⃣ Gossip (stub)
         self._broadcast_danger(alerta, ruta)
 
     def _broadcast_danger(self, alerta: Alerta, ruta) -> None:
