@@ -402,9 +402,18 @@
 
                 feed.innerHTML = visions.map(v => `
                     <div class="vision-card">
-                        <div style="font-weight:bold;">${v.perpetrator.name} -> ${v.target.name}</div>
-                        <div>Prob: <span class="${v.probability > 0.8 ? 'high-risk' : 'medium-risk'}">${(v.probability * 100).toFixed(1)}%</span></div>
-                        <div style="font-size:0.8em; color:#888;">${new Date(v.timestamp).toLocaleTimeString()}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="font-weight:bold; font-size: 1.1em; color: var(--accent-blue);">${v.target.name}</div>
+                            <span class="${v.probability > 0.8 ? 'high-risk' : 'medium-risk'}" style="font-weight:bold;">
+                                ${(v.probability * 100).toFixed(0)}%
+                            </span>
+                        </div>
+                        <div style="font-size:0.9em; color: var(--text-secondary); margin-bottom: 4px;">
+                            <i class="fas fa-user-secret"></i> ${v.perpetrator.name}
+                        </div>
+                        <div style="font-size:0.8em; color:#64748b; text-align: right;">
+                            ${new Date(v.timestamp).toLocaleTimeString()}
+                        </div>
                     </div>
                 `).join('');
 
