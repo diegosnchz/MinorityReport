@@ -151,6 +151,7 @@ def train_gat_model(data, epochs=100, lr=0.005, hidden_channels=64,
     print("=" * 80)
     
     best_loss = float('inf')
+    best_epoch = 0
     
     for epoch in range(1, epochs + 1):
         # Train
