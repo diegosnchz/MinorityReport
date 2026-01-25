@@ -54,5 +54,7 @@ oracle_net_best.pth
 /tmp/
 
 # Docker
-models/
-logs/
+# Note: /models/ at root would be trained models, src/models/ is source code
+/models/
+/logs/
+checkpoints/
