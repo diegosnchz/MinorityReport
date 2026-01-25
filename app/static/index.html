@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Crime Division | Dashboard</title>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-red: #f87171;
+            --accent-green: #4ade80;
+            --accent-purple: #a855f7;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* CHATBOT STYLES (MATCHING ANALYTICS THEME) */
+        .chat-fab {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        .chat-fab:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 100px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-blue);
+            backdrop-filter: blur(16px);
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 1000;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-header {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 15px;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--accent-blue);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .msg.system {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(56, 189, 248, 0.2);
+            border-right: 3px solid var(--accent-blue);
+            color: var(--accent-blue);
+            text-align: right;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 8px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        /* LAYOUT REFACTOR - CLEAN & SPACIOUS */
+        #graph-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            bottom: 20px;
+            width: 350px;
+            z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.4em;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 15px;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h1 i {
+            color: var(--accent-blue);
+        }
+
+        #vision-feed {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .vision-card {
+            border: 1px solid var(--card-border);
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--accent-red);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vision-card:hover {
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        /* Risk Levels */
+        .high-risk {
+            color: var(--accent-red);
+            font-weight: bold;
+        }
+
+        .medium-risk {
+            color: var(--accent-green);
+        }
+
+        /* Scrollbar styling */
+        #vision-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #vision-feed::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #vision-feed::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 3px;
+        }
+
+        .nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-top: 1px solid var(--card-border);
+            padding-top: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            background: var(--accent-blue);
+            color: #0f172a;
+            border-radius: 6px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-alert {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-alert:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-blue);
+        }
+
+        .btn-green {
+            background: var(--accent-blue);
+            /* Using Blue for Chat send to match theme */
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDE PANEL (UNIFIED) -->
+    <div id="ui-layer">
+        <div>
+            <h1>
+                <i class="fas fa-network-wired"></i> GNN MAIN
+            </h1>
+            <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">MADRID SECTOR | LIVE FEED
+            </div>
+        </div>
+
+        <div id="vision-feed">
+            <div style="padding: 20px; text-align: center; color: var(--text-secondary);">Initializing Neural Link...
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <button class="btn-secondary" onclick="window.location.href='/analytics-dashboard'">
+                <i class="fas fa-chart-pie"></i> VIEW ANALYTICS
+            </button>
+
+            <button class="btn-secondary" onclick="window.location.href='/map-view'">
+                <i class="fas fa-map-marked-alt"></i> COMMAND MAP
+            </button>
+
+            <button class="btn-alert" onclick="triggerSimulation()">
+                <i class="fas fa-bolt"></i> RUN SIMULATION
+            </button>
+        </div>
+    </div>
+
+    <!-- Chatbot Integration -->
+    <div class="chat-fab" onclick="toggleChat()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <span><i class="fas fa-brain"></i> PRECOG ASSISTANT</span>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
+        </div>
+        <div class="chat-messages" id="chat-feed">
+            <div class="msg system">GNN Neural Link Active.<br><i>System ready for inquiries.</i></div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Query Neural Net..."
+                onkeypress="handleKeyPress(event)">
+            <button class="btn-green" style="width: auto; padding: 8px 12px; margin-bottom:0;" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="graph-container"></div>
+
+    <script>
+        const graphElem = document.getElementById('graph-container');
+        let Graph = ForceGraph3D()(graphElem)
+            .backgroundColor('#02040a') // Deepest Slate/Black for max contrast
+            .nodeRelSize(6) // Make spheres larger and more visible
+            .nodeColor(node => {
+                // If not in analysis, use a muted color
+                if (node.in_analysis === false) return '#334155'; // Muted Slate Gray
+
+                // High Contrast Palette for Analysis Nodes
+                const g = node.group ? node.group.toLowerCase() : '';
+                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Red
+                if (g === 'yellow' || g === 'location') return '#fbbf24'; // Amber
+                if (g === 'blue' || g === 'citizen') return '#38bdf8'; // Cyan
+                if (g === 'green' || g === 'safe') return '#4ade80'; // Green
+                return '#a855f7'; // Purple (Default/Unknown)
+            })
+            .nodeLabel(node => `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.label} (${node.type || 'Node'})</span>`)
+            .linkWidth(link => link.value > 0.5 ? 2 : 1)
+            .linkColor(() => '#ffffff') // White links for high visibility against dark bg
+            .linkOpacity(0.2) // Slight transparency to avoid visual noise but keep connections visible
+            .onNodeClick(node => {
+                const distance = 40;
+                const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                Graph.cameraPosition(
+                    { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+                    node,
+                    3000
+                );
+            });
+
+        async function fetchGraphData() {
+            try {
+                const res = await fetch('/visions/graph?limit=300');
+                const data = await res.json();
+
+                // Only update if number of nodes changed to avoid constant resets
+                const currentData = Graph.graphData();
+                if (!currentData || currentData.nodes.length !== data.nodes.length) {
+                    Graph.graphData(data);
+                }
+            } catch (e) { console.error("Error fetching graph:", e); }
+        }
+
+        async function fetchActiveVisions() {
+            const feed = document.getElementById('vision-feed');
+            try {
+                const res = await fetch('/visions/active');
+                const visions = await res.json();
+
+                if (visions.length === 0) {
+                    feed.innerHTML = "No active threats detected.";
+                    return;
+                }
+
+                feed.innerHTML = visions.map(v => `
+                    <div class="vision-card">
+                        <div style="font-weight:bold;">${v.perpetrator.name} -> ${v.target.name}</div>
+                        <div>Prob: <span class="${v.probability > 0.8 ? 'high-risk' : 'medium-risk'}">${(v.probability * 100).toFixed(1)}%</span></div>
+                        <div style="font-size:0.8em; color:#888;">${new Date(v.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                `).join('');
+
+            } catch (e) { console.error("Error fetching visions:", e); }
+        }
+
+        async function triggerSimulation() {
+            await fetch('/simulation/step', { method: 'POST' });
+            fetchGraphData();
+            fetchActiveVisions();
+            addSystemMessage("Simulation Step Complete. Graph updated.");
+        }
+
+        /* CHATBOT LOGIC */
+        function toggleChat() {
+            const w = document.getElementById('chat-window');
+            w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function addSystemMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg system">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML += `<div class="msg user">${text}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            addUserMessage(txt);
+            input.value = '';
+
+            const lower = txt.toLowerCase();
+
+            // 1. Evasion Intent
+            if (lower.includes("route") || lower.includes("escape")) {
+                addSystemMessage("Redirecting to Command Map for Evasion Protocol...");
+                setTimeout(() => window.location.href = '/map-view', 1500);
+                return;
+            }
+
+            // 2. Explanation Intent
+            if (lower.includes("why") || lower.includes("danger")) {
+                addSystemMessage("Accessing XAI Subsystem...");
+                try {
+                    const res = await fetch("/evasion/explain-risk?hour=2&weather=Clear&patrols=5");
+                    const data = await res.json();
+
+                    const responseHTML = `
+                        <strong>SHAP Analysis:</strong><br>
+                        Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
+                        Critical Factors: ${data.top_factors.join(", ")}
+                    `;
+                    addSystemMessage(responseHTML);
+                } catch (e) {
+                    addSystemMessage("Error connecting to Forensic Module.");
+                }
+                return;
+            }
+
+            addSystemMessage("Command not recognized. Protocols: 'Escape', 'Why is this dangerous?'.");
+        }
+
+        fetchGraphData();
+        fetchActiveVisions();
+        setInterval(fetchActiveVisions, 5000);
+        setInterval(fetchGraphData, 30000); // Fetch graph only every 30s
+    </script>
+</body>
+
+</html>

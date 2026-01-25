@@ -41,15 +41,15 @@ class EdgeNode:
                 # 2. Push/Pull Sync
                 # Simulating an exchange of "Graph Diffs" (random vector updates)
                 digest = self.prepare_digest()
-                print(f"[Node {self.node_id}] 📡 Contacting [Node {peer.node_id}] | My Version: {digest['version']}")
+                print(f"[Node {self.node_id}] Contacting [Node {peer.node_id}] | My Version: {digest['version']}")
                 
                 # Simulate receiving an update that increases our knowledge (version)
                 if random.random() > 0.5:
                      with self.lock:
                          self.local_graph_view['version'] += 1
-                         print(f"   ↳ [Node {self.node_id}] ✅ Synced with {peer.node_id}. New Version: {self.local_graph_view['version']}")
+                         print(f"             [Node {self.node_id}] Synced with {peer.node_id}. New Version: {self.local_graph_view['version']}")
                 else:
-                     print(f"   ↳ [Node {self.node_id}] ➖ No updates needed.")
+                     print(f"             [Node {self.node_id}] - No updates needed.")
             
             # 3. Wait (e.g., 100ms)
             time.sleep(0.1)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         potential = [n for n in nodes if n != node]
         node.neighbors = random.sample(potential, 2)
 
-    print("--- 🕵️ Minority Report: Distributed Edge Gossip Network Started ---")
+    print("--- Minority Report: Distributed Edge Gossip Network Started ---")
     print("Nodes are exchanging local graph embeddings to synchronize criminal patterns...")
     
     # Start Gossip Threads
