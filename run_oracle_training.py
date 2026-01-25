@@ -24,8 +24,7 @@ if __name__ == "__main__":
     # Run training with default parameters
     model, history = train_oracle_net(
         num_epochs=50,
-        num_graphs=100,
-        num_nodes_per_graph=50
+        num_graphs=100
     )
     
     print("=" * 60)

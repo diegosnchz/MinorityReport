@@ -96,6 +96,10 @@ def train_minibatch_epoch(
                 src_risk = batch.x[batch.edge_index[0], 0]
                 dst_risk = batch.x[batch.edge_index[1], 0]
                 edge_labels = ((src_risk + dst_risk) / 2 < 0.5).float().unsqueeze(1)
+            else:
+                # Ensure edge_labels has correct shape
+                if edge_labels.dim() == 1:
+                    edge_labels = edge_labels.unsqueeze(1)
             
             loss = F.binary_cross_entropy(predictions, edge_labels)
         
@@ -219,6 +223,9 @@ def evaluate_minibatch(
                 src_risk = batch.x[batch.edge_index[0], 0]
                 dst_risk = batch.x[batch.edge_index[1], 0]
                 edge_labels = ((src_risk + dst_risk) / 2 < 0.5).float().unsqueeze(1)
+            else:
+                if edge_labels.dim() == 1:
+                    edge_labels = edge_labels.unsqueeze(1)
             
             loss = F.binary_cross_entropy(predictions, edge_labels)
             pred_binary = (predictions > 0.5).float()
@@ -401,6 +408,13 @@ def train_graphsage_minibatch(
                       f"Val Acc: {val_acc:.4f}")
         
         total_time = time.time() - start_time
+        
+        # Build history
+        history = {
+            'train_loss': [train_loss],
+            'val_loss': [val_loss],
+            'val_accuracy': [val_acc]
+        }
     
     print(f"\n{'='*70}")
     print("✅ Training Completed!")
@@ -412,7 +426,7 @@ def train_graphsage_minibatch(
         print(f"Best validation loss: {best_val_loss:.4f}")
         print(f"Model saved to: graphsage_{aggregator}_best.pth")
     
-    return model
+    return model, history
 
 
 def compare_aggregators():

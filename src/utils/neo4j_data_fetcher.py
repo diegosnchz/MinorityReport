@@ -12,6 +12,7 @@ Based on the data structure from dataEngineer branch:
 
 import torch
 import pandas as pd
+import numpy as np
 import logging
 import os
 from datetime import datetime
@@ -41,9 +42,9 @@ class Neo4jDataFetcher:
     - Relationships: (:Citizen)-[:VISITED]->(:Location)
     """
     
-    def __init__(self, uri: str = None, 
-                 user: str = None, 
-                 password: str = None):
+    def __init__(self, uri: str = "EntrenoParaCere", 
+                 user: str = "neo4j", 
+                 password: str = "A8ZCorbDG8GNBbM2y5PhK3QOwNSdy1SykRkn-BcEVfg"):
         """
         Initialize Neo4j connection.
         
@@ -58,7 +59,7 @@ class Neo4jDataFetcher:
         # Get credentials from environment or use defaults
         self.uri = uri or os.getenv("NEO4J_URI", "bolt://localhost:7687")
         user = user or os.getenv("NEO4J_USER", "neo4j")
-        password = password or os.getenv("NEO4J_PASSWORD", "secret_password_123")
+        password = password or os.getenv("NEO4J_PASSWORD", "minorityreport")
         
         self.driver = GraphDatabase.driver(self.uri, auth=(user, password))
         logger.info(f"Connected to Neo4j at {self.uri}")
@@ -262,6 +263,211 @@ class Neo4jDataFetcher:
         
         logger.info("✅ Graph data fetched successfully!")
         return data
+    
+    def get_pyg_data(self, relationship_type: str = "KNOWS") -> Optional[Data]:
+        """
+        Get PyG Data object using specified relationship type.
+        Compatible with dataEngineer branch schema.
+        
+        Args:
+            relationship_type: Edge type to use (KNOWS, INTERACTS_WITH, etc.)
+        
+        Returns:
+            PyTorch Geometric Data object
+        """
+        logger.info(f"📊 Fetching citizen graph with {relationship_type} edges...")
+        
+        # Fetch nodes with extended properties - use exact property names from seed_neo4j.py
+        node_query = """
+        MATCH (c:Citizen)
+        RETURN c.id as id, 
+               c.born as born, 
+               c.job as job,
+               coalesce(c.criminalDegree, 0) as crim_deg,
+               coalesce(c.preCrimeRiskScore, 0.5) as target,
+               coalesce(c.preCrimeRiskScore, 0.5) as risk_score,
+               coalesce(c.criminalRecord, 0) as criminal_record
+        ORDER BY c.id ASC
+        """
+        
+        # Fetch edges
+        edge_query = f"""
+        MATCH (c1:Citizen)-[r:{relationship_type}]->(c2:Citizen)
+        RETURN c1.id as source, c2.id as target
+        """
+        
+        try:
+            with self.driver.session() as session:
+                # Get nodes
+                node_result = session.run(node_query)
+                nodes = [dict(r) for r in node_result]
+                
+                if not nodes:
+                    logger.warning("No citizens found!")
+                    return None
+                
+                # Get edges
+                edge_result = session.run(edge_query)
+                edges = [dict(r) for r in edge_result]
+            
+            # Process node features
+            df = pd.DataFrame(nodes)
+            
+            # Handle missing values
+            df['born'] = pd.to_numeric(df['born'], errors='coerce')
+            df['crim_deg'] = pd.to_numeric(df['crim_deg'], errors='coerce').fillna(0)
+            df['target'] = pd.to_numeric(df['target'], errors='coerce').fillna(0.5)
+            df['risk_score'] = pd.to_numeric(df['risk_score'], errors='coerce').fillna(0.5)
+            df['criminal_record'] = pd.to_numeric(df['criminal_record'], errors='coerce').fillna(0)
+            
+            current_year = datetime.now().year
+            df['born'] = df['born'].fillna(current_year - 30)
+            df['age'] = (current_year - df['born']) / 100.0
+            
+            # One-hot encode jobs
+            df['job'] = df['job'].fillna('unknown')
+            job_dummies = pd.get_dummies(df['job'], prefix='job')
+            
+            # Build feature matrix with numeric features only
+            feature_cols = ['age', 'crim_deg', 'risk_score', 'criminal_record']
+            for col in job_dummies.columns:
+                df[col] = job_dummies[col].astype(float)
+                feature_cols.append(col)
+            
+            # Make sure all features are numeric
+            x_values = df[feature_cols].values.astype(np.float32)
+            x = torch.tensor(x_values, dtype=torch.float)
+            
+            # Labels (binary classification based on risk)
+            risk_threshold = df['target'].median()
+            y = torch.tensor((df['target'] > risk_threshold).astype(np.int64).values, dtype=torch.long)
+            
+            # Build edge index
+            if edges and len(edges) > 0:
+                node_ids = sorted(df['id'].unique())
+                id_to_idx = {int(nid): idx for idx, nid in enumerate(node_ids)}
+                
+                edge_src = []
+                edge_tgt = []
+                
+                for e in edges:
+                    src_id = int(e['source']) if e['source'] is not None else None
+                    tgt_id = int(e['target']) if e['target'] is not None else None
+                    
+                    if src_id in id_to_idx and tgt_id in id_to_idx:
+                        edge_src.append(id_to_idx[src_id])
+                        edge_tgt.append(id_to_idx[tgt_id])
+                
+                edge_index = torch.tensor([edge_src, edge_tgt], dtype=torch.long)
+            else:
+                edge_index = torch.empty((2, 0), dtype=torch.long)
+            
+            data = Data(x=x, edge_index=edge_index, y=y)
+            logger.info(f"✅ Citizen graph: {data.num_nodes} nodes, {data.num_edges} edges, {data.num_features} features")
+            return data
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch citizen graph: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def fetch_location_graph(self) -> Optional[Data]:
+        """
+        Fetch Location graph for escape route optimization.
+        Compatible with dataEngineer branch schema.
+        
+        Returns:
+            PyTorch Geometric Data object for locations
+        """
+        logger.info("🗺️ Fetching location graph...")
+        
+        # Fetch location nodes
+        node_query = """
+        MATCH (l:Location)
+        RETURN l.id as id,
+               l.name as name,
+               coalesce(l.policeLevel, 0.5) as police_level,
+               coalesce(l.locationType, 0) as loc_type,
+               coalesce(l.illumination, 0.5) as illumination,
+               coalesce(l.density, 0.5) as density,
+               coalesce(l.envRisk, l.env_risk, 0.5) as env_risk,
+               coalesce(l.latitude, 0) as lat,
+               coalesce(l.longitude, 0) as lng
+        ORDER BY l.id ASC
+        """
+        
+        # Fetch connections
+        edge_query = """
+        MATCH (l1:Location)-[r:CONNECTED_TO]->(l2:Location)
+        RETURN l1.id as source, 
+               l2.id as target,
+               coalesce(r.distance, 1.0) as distance,
+               coalesce(r.surveillanceLevel, 0.5) as surveillance
+        """
+        
+        try:
+            with self.driver.session() as session:
+                # Get nodes
+                node_result = session.run(node_query)
+                nodes = [r.data() for r in node_result]
+                
+                if not nodes:
+                    logger.warning("No locations found!")
+                    return None
+                
+                # Get edges
+                edge_result = session.run(edge_query)
+                edges = [r.data() for r in edge_result]
+            
+            # Build feature matrix
+            df = pd.DataFrame(nodes)
+            feature_cols = ['police_level', 'loc_type', 'illumination', 'density', 'env_risk', 'lat', 'lng']
+            
+            # Normalize coordinates
+            if df['lat'].std() > 0:
+                df['lat'] = (df['lat'] - df['lat'].mean()) / df['lat'].std()
+                df['lng'] = (df['lng'] - df['lng'].mean()) / df['lng'].std()
+            
+            x = torch.tensor(df[feature_cols].values, dtype=torch.float)
+            
+            # Store police level for labeling
+            police_level = torch.tensor(df['police_level'].values, dtype=torch.float)
+            
+            # Build edge index
+            if edges:
+                node_ids = sorted(df['id'].unique())
+                id_to_idx = {nid: idx for idx, nid in enumerate(node_ids)}
+                
+                edge_src = []
+                edge_tgt = []
+                edge_attr = []
+                
+                for e in edges:
+                    if e['source'] in id_to_idx and e['target'] in id_to_idx:
+                        edge_src.append(id_to_idx[e['source']])
+                        edge_tgt.append(id_to_idx[e['target']])
+                        edge_attr.append([e['distance'], e['surveillance']])
+                
+                edge_index = torch.tensor([edge_src, edge_tgt], dtype=torch.long)
+                edge_attr_tensor = torch.tensor(edge_attr, dtype=torch.float) if edge_attr else None
+            else:
+                edge_index = torch.empty((2, 0), dtype=torch.long)
+                edge_attr_tensor = None
+            
+            data = Data(x=x, edge_index=edge_index)
+            data.police_level = police_level
+            data.location_names = df['name'].tolist()
+            
+            if edge_attr_tensor is not None:
+                data.edge_attr = edge_attr_tensor
+            
+            logger.info(f"✅ Location graph: {data.num_nodes} nodes, {data.num_edges} edges")
+            return data
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch location graph: {e}")
+            return None
 
 
 def fetch_graph_data(uri: str = None,

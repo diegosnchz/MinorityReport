@@ -24,12 +24,11 @@ if __name__ == "__main__":
     # Run training with default parameters
     model, history = train_graphsage_minibatch(
         num_epochs=20,
-        num_nodes=1000,
         batch_size=32,
-        aggregator_type='mean'
+        aggregator='mean'
     )
     
     print("=" * 60)
     print("[Training Complete]")
     print(f"Final train loss: {history['train_loss'][-1]:.4f}")
-    print(f"Final train accuracy: {history['train_accuracy'][-1]:.4f}")
+    print(f"Final val accuracy: {history['val_accuracy'][-1]:.4f}")

@@ -2,10 +2,11 @@
 Model package for MinorityReport AI system.
 
 This package contains all neural network models for:
+- OracleNet (GCN + GAT hybrid for escape route optimization)
+- GraphSAGE (scalable graph embeddings with mini-batch training)
 - Risk prediction (GAT-based)
 - Movement prediction
 - Behavior pattern analysis
-- Crime prediction
 
 Models are designed to:
 1. Train on GPU for speed
@@ -14,7 +15,24 @@ Models are designed to:
 4. Use dataEngineer graph data efficiently
 """
 
+from .oracle_net import OracleNet, create_oracle_net
+from .graphsage_model import (
+    GraphSAGEMiniBatch,
+    GraphSAGEWithClustering,
+    GraphSAGEAggregator,
+    create_graphsage_model
+)
+
 __all__ = [
+    # OracleNet
+    'OracleNet',
+    'create_oracle_net',
+    # GraphSAGE
+    'GraphSAGEMiniBatch',
+    'GraphSAGEWithClustering',
+    'GraphSAGEAggregator',
+    'create_graphsage_model',
+    # Legacy
     'RiskPredictionGAT',
     'MovementPredictionModel',
     'BehaviorPatternModel',

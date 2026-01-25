@@ -1,0 +1,168 @@
+# Quick Reference Card
+
+## 🚀 Deployment en 5 Comandos
+
+```powershell
+# 1. Entrar al directorio
+cd "D:\Repositorios Github\MinorityReport"
+
+# 2. Ejecutar deployment
+.\deploy_real_environment.ps1 -Citizens 200 -Epochs 100
+
+# ✅ Listo. Los modelos estarán en ./models/
+```
+
+---
+
+## 📦 Instalación Manual (Si Prefieres Paso a Paso)
+
+```powershell
+# Crear venv
+python -m venv venv311
+.\venv311\Scripts\Activate.ps1
+
+# Instalar
+pip install -r config/requirements.txt
+pip install -r config/requirements_cuda.txt
+
+# Ejecutar
+docker-compose down -v
+docker-compose up neo4j -d
+Start-Sleep -Seconds 30
+python scripts/seed_neo4j.py --citizens 200
+python scripts/train_with_neo4j.py --model both --epochs 100
+```
+
+---
+
+## 🔌 Conectar a Neo4j
+
+```
+URL: http://localhost:7474
+User: neo4j
+Pass: minorityreport
+```
+
+Queries útiles:
+```cypher
+MATCH (n) RETURN count(n)
+MATCH (c:Citizen) WHERE c.preCrimeRiskScore > 0.7 RETURN c
+MATCH (l1)-[r:CONNECTED_TO]->(l2) RETURN l1, l2 LIMIT 10
+```
+
+---
+
+## 📊 Cargar Modelos
+
+```python
+import torch
+
+# Crime Prediction
+model = torch.load('models/crime_prediction_best.pt')
+
+# Escape Routes  
+model = torch.load('models/escape_route_best.pt')
+```
+
+---
+
+## ⚡ Comandos Principales
+
+```powershell
+# Generar datos (200 ciudadanos)
+python scripts/seed_neo4j.py --citizens 200
+
+# Entrenar crime prediction (50 épocas)
+python scripts/train_with_neo4j.py --model crime --epochs 50
+
+# Entrenar escape routes (50 épocas)
+python scripts/train_with_neo4j.py --model escape --epochs 50
+
+# Entrenar ambos
+python scripts/train_with_neo4j.py --model both --epochs 100
+
+# Entrenar en CPU
+python scripts/train_with_neo4j.py --model both --device cpu
+
+# Ver GPU
+nvidia-smi
+
+# Activar venv
+.\venv311\Scripts\Activate.ps1
+
+# Docker
+docker-compose up neo4j -d
+docker-compose down
+docker-compose logs neo4j
+```
+
+---
+
+## 🐛 Errores Comunes
+
+| Error | Solución |
+|-------|----------|
+| Docker not running | Abrir Docker Desktop |
+| Neo4j connection failed | `docker-compose restart neo4j` + esperar 30s |
+| Python not found | Usar `python3` o verificar PATH |
+| CUDA out of memory | `--device cpu` o reducir `--citizens` |
+| numpy error | `pip install "numpy<2.0"` |
+| Module not found | `.\venv311\Scripts\Activate.ps1` |
+
+**Ver más**: TROUBLESHOOTING.md
+
+---
+
+## 📁 Archivos Importantes
+
+```
+venv311/              → Python environment
+scripts/
+  seed_neo4j.py      → Generar datos
+  train_with_neo4j.py → Entrenar
+src/
+  models/            → Modelos GNN
+  utils/             → Neo4j helper
+models/              → Modelos entrenados (.pt)
+docs/
+  DEPLOYMENT_GUIDE.md      → Guía completa
+  TROUBLESHOOTING.md       → Errores
+```
+
+---
+
+## 🎯 Flujo Típico
+
+```
+1. Instalar dependencias
+   ↓
+2. Activar venv
+   ↓
+3. docker-compose up neo4j
+   ↓
+4. python scripts/seed_neo4j.py
+   ↓
+5. python scripts/train_with_neo4j.py
+   ↓
+6. Modelos listos en ./models/
+```
+
+---
+
+## 💾 Salvar Predicciones a Neo4j
+
+```powershell
+python scripts/train_with_neo4j.py --model both --write-back
+```
+
+---
+
+## 📖 Documentación Completa
+
+- **DEPLOYMENT_GUIDE.md** - Guía detallada (requerimientos, instalación, uso)
+- **TROUBLESHOOTING.md** - 20 errores comunes con soluciones
+- **README.md** - Este archivo (referencia rápida)
+
+---
+
+**Actualizado**: 25 Enero 2026 | Versión: 1.0.0
