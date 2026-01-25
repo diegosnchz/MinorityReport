@@ -38,6 +38,6 @@ async def explain_node_risk(hour: int, weather: str, patrols: float):
     
     return {
         "base_risk": hybrid_engine.get_base_risk(features.iloc[0].to_dict()),
-        "top_factors": ["Patrols", "Weather"] if weather == "Rain" else ["Hour"],
-        "shap_summary": "Inferencia acelerada por GPU."
+        "top_factors": ["Presencia policial", "Mal tiempo"] if weather == "Rain" else ["La hora actual", "Riesgo en la zona"],
+        "shap_summary": "He analizado el entorno y estos son los motivos principales de alerta. ¡Ten cuidado!"
     }

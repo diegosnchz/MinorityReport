@@ -19,6 +19,8 @@
             --accent-red: #f87171;
             --accent-green: #4ade80;
             --accent-purple: #a855f7;
+            --update-alert: #f59e0b;
+            /* Amber for version badge */
         }
 
         body {
@@ -73,14 +75,15 @@
         }
 
         .chat-header {
-            background: rgba(56, 189, 248, 0.1);
+            background: #1e3a8a;
+            /* Different blue to confirm update */
             padding: 15px;
             border-bottom: 1px solid rgba(56, 189, 248, 0.3);
             font-weight: bold;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: var(--accent-blue);
+            color: white;
         }
 
         .chat-messages {
@@ -287,6 +290,32 @@
             /* Using Blue for Chat send to match theme */
             color: #000;
         }
+
+        /* CHAT SUGGESTIONS */
+        .chat-suggestions {
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .suggestion-chip {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--accent-blue);
+            color: #000;
+        }
     </style>
 </head>
 
@@ -328,14 +357,29 @@
 
     <div class="chat-window" id="chat-window">
         <div class="chat-header">
-            <span><i class="fas fa-brain"></i> PRECOG ASSISTANT</span>
+            <span><i class="fas fa-brain"></i> ASISTENTE LUMEN <small
+                    style="background: var(--update-alert); color: black; padding: 2px 4px; border-radius: 4px; font-size: 0.6em;">v2.1</small></span>
             <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
         </div>
         <div class="chat-messages" id="chat-feed">
-            <div class="msg system">GNN Neural Link Active.<br><i>System ready for inquiries.</i></div>
+            <div class="msg system">
+                <b>¡Hola! Soy tu asistente de seguridad.</b><br>
+                Estoy aquí para ayudarte a entender los riesgos de la ciudad de forma sencilla.<br><br>
+                <b>📖 Guía de uso:</b><br>
+                • Usa los botones de abajo para consultas rápidas.<br>
+                • Pregúntame "¿Por qué?" sobre cualquier alerta.<br>
+                • Pídeme una "Ruta" para moverte con seguridad.
+            </div>
+        </div>
+        <div class="chat-suggestions">
+            <div class="suggestion-chip"
+                onclick="addUserMessage('🔍 Explicar Riesgo'); sendMessage('🔍 Explicar Riesgo')">🔍 Explicar Riesgo
+            </div>
+            <div class="suggestion-chip" onclick="addUserMessage('🛡️ Ruta Segura'); sendMessage('🛡️ Ruta Segura')">🛡️
+                Ruta Segura</div>
         </div>
         <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Query Neural Net..."
+            <input type="text" class="chat-input" id="chat-input" placeholder="Consultar Red Neuronal..."
                 onkeypress="handleKeyPress(event)">
             <button class="btn-green" style="width: auto; padding: 8px 12px; margin-bottom:0;" onclick="sendMessage()">
                 <i class="fas fa-paper-plane"></i>
@@ -449,43 +493,45 @@
             feed.scrollTop = feed.scrollHeight;
         }
 
-        async function sendMessage() {
+        async function sendMessage(manualText = null) {
             const input = document.getElementById('chat-input');
-            const txt = input.value.trim();
+            const txt = manualText || input.value.trim();
             if (!txt) return;
 
-            addUserMessage(txt);
+            if (!manualText) addUserMessage(txt);
             input.value = '';
 
             const lower = txt.toLowerCase();
 
-            // 1. Evasion Intent
-            if (lower.includes("route") || lower.includes("escape")) {
-                addSystemMessage("Redirecting to Command Map for Evasion Protocol...");
+            // 1. Evasion Intent (Ruta)
+            if (lower.includes("ruta") || lower.includes("escape") || lower.includes("huida")) {
+                addSystemMessage("Redirigiendo al Mapa de Mando para Protocolo de Evasión...");
                 setTimeout(() => window.location.href = '/map-view', 1500);
                 return;
             }
 
-            // 2. Explanation Intent
-            if (lower.includes("why") || lower.includes("danger")) {
-                addSystemMessage("Accessing XAI Subsystem...");
+            // 2. Explanation Intent (Riesgo/Por qué)
+            if (lower.includes("por qué") || lower.includes("riesgo") || lower.includes("analizar") || lower.includes("explicar")) {
+                addSystemMessage("Consultando con los Precogs... un momento.");
                 try {
                     const res = await fetch("/evasion/explain-risk?hour=2&weather=Clear&patrols=5");
                     const data = await res.json();
 
                     const responseHTML = `
-                        <strong>SHAP Analysis:</strong><br>
-                        Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
-                        Critical Factors: ${data.top_factors.join(", ")}
+                        <b>Informe de Seguridad:</b><br>
+                        • Nivel de peligro: ${(data.base_risk * 100).toFixed(0)}%<br>
+                        • Motivos Principales: ${data.top_factors.join(", ")}<br><br>
+                        <i>"${data.shap_summary}"</i>
                     `;
                     addSystemMessage(responseHTML);
                 } catch (e) {
-                    addSystemMessage("Error connecting to Forensic Module.");
+                    addSystemMessage("Lo siento, no he podido conectar con la base de datos forense.");
                 }
                 return;
             }
 
-            addSystemMessage("Command not recognized. Protocols: 'Escape', 'Why is this dangerous?'.");
+            // 3. Fallback
+            addSystemMessage("No estoy seguro de cómo ayudarte con eso. Prueba a pulsar en '🔍 Explicar Riesgo'.");
         }
 
         fetchGraphData();

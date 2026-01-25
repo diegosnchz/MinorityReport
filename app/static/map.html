@@ -3,8 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pre-Crime Unit | Command Dashboard</title>
+    <title>Pre-Crime Unit | Command Dashboard (v2.0 Esp)</title>
 
     <!-- Dependencies -->
     <script src="https://unpkg.com/deck.gl@8.9.0/dist.min.js"></script>
@@ -212,6 +215,32 @@
             z-index: 1000;
         }
 
+        /* CHAT SUGGESTIONS */
+        .chat-suggestions {
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .suggestion-chip {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--accent-blue);
+            color: #000;
+        }
+
         .chat-fab:hover {
             transform: scale(1.1);
         }
@@ -236,7 +265,8 @@
         }
 
         .chat-header {
-            background: rgba(56, 189, 248, 0.1);
+            background: #1e3a8a;
+            /* Different blue to confirm update */
             padding: 15px;
             border-bottom: 1px solid rgba(56, 189, 248, 0.3);
             font-weight: bold;
@@ -359,15 +389,29 @@
         <!-- Chat Window -->
         <div class="chat-window" id="chat-window">
             <div class="chat-header">
-                <span><i class="fas fa-brain"></i> PRECOG ASSISTANT</span>
+                <span><i class="fas fa-brain"></i> ASISTENTE LUMEN <small
+                        style="background: #f59e0b; color: black; padding: 2px 4px; border-radius: 4px; font-size: 0.6em;">v2.1</small></span>
                 <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
             </div>
             <div class="chat-messages" id="chat-feed">
-                <div class="msg system">Neural Link Established. System ready for inquiries.<br><i>Try: "Why is this
-                        zone dangerous?"</i></div>
+                <div class="msg system">
+                    <b>¡Bienvenido al Centro de Mando!</b><br>
+                    Soy tu IA de asistencia. Puedo ayudarte a navegar por la ciudad y entender los riesgos detectados
+                    por los Precogs.<br><br>
+                    <b>📖 Guía rápida:</b><br>
+                    • Pulsa en <b>"Explicar Riesgo"</b> para saber por qué una zona es peligrosa.<br>
+                    • Pulsa en <b>"Ruta Segura"</b> para encontrar el camino más fácil.
+                </div>
+            </div>
+            <div class="chat-suggestions">
+                <div class="suggestion-chip"
+                    onclick="addUserMessage('🔍 Explicar Riesgo'); sendMessage('🔍 Explicar Riesgo')">🔍 Explicar Riesgo
+                </div>
+                <div class="suggestion-chip"
+                    onclick="addUserMessage('🛡️ Ruta Segura'); sendMessage('🛡️ Ruta Segura')">🛡️ Ruta Segura</div>
             </div>
             <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chat-input" placeholder="Type command..."
+                <input type="text" class="chat-input" id="chat-input" placeholder="Escribe un comando..."
                     onkeypress="handleKeyPress(event)">
                 <button class="control-btn" style="width: auto; padding: 8px 12px; margin-top:0;"
                     onclick="sendMessage()">
@@ -548,27 +592,27 @@
             feed.scrollTop = feed.scrollHeight;
         }
 
-        async function sendMessage() {
+        async function sendMessage(manualText = null) {
             const input = document.getElementById('chat-input');
-            const txt = input.value.trim();
+            const txt = manualText || input.value.trim();
             if (!txt) return;
 
-            addUserMessage(txt);
+            if (!manualText) addUserMessage(txt);
             input.value = '';
 
             // Intent Recognition
             const lower = txt.toLowerCase();
 
-            // 1. Evasion Intent
-            if (lower.includes("route") || lower.includes("escape") || lower.includes("path")) {
-                addSystemMessage("Acknowledged. Calculating optimal evasion route via HPC...");
+            // 1. Evasion Intent (Ruta)
+            if (lower.includes("ruta") || lower.includes("escape") || lower.includes("camino")) {
+                addSystemMessage("Recibido. Calculando ruta de evasión óptima vía HPC...");
                 triggerEscapeRouting();
                 return;
             }
 
-            // 2. Explanation Intent
-            if (lower.includes("why") || lower.includes("danger") || lower.includes("risk")) {
-                addSystemMessage("Accessing XAI Subsystem...");
+            // 2. Explanation Intent (Riesgo)
+            if (lower.includes("por qué") || lower.includes("riesgo") || lower.includes("peligro") || lower.includes("explicar")) {
+                addSystemMessage("Analizando datos forenses... un momento.");
                 try {
                     // Fetch real explanation from backend
                     // Dummy params for demo
@@ -576,20 +620,20 @@
                     const data = await res.json();
 
                     const responseHTML = `
-                        <strong>SHAP Analysis Detected:</strong><br>
-                        Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
-                        Critical Factors: ${data.top_factors.join(", ")}<br>
-                        <span style="font-size:0.8em; color:var(--accent-green);">${data.shap_summary}</span>
+                        <b>Informe de Riesgo:</b><br>
+                        • Nivel de alerta: ${(data.base_risk * 100).toFixed(0)}%<br>
+                        • Posibles causas: ${data.top_factors.join(", ")}<br><br>
+                        <i>"${data.shap_summary}"</i>
                     `;
                     addSystemMessage(responseHTML);
                 } catch (e) {
-                    addSystemMessage("Error connecting to Forensic Module.");
+                    addSystemMessage("No he podido obtener la explicación en este momento.");
                 }
                 return;
             }
 
             // 3. Fallback
-            addSystemMessage("Command not recognized. Protocols: 'Generate Route', 'Why is this dangerous?'.");
+            addSystemMessage("No he entendido eso. ¿Por qué no pruebas con uno de los botones de ayuda?");
         }
 
         initMap();
