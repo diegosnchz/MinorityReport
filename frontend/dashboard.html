@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRIME ANALYTICS DASHBOARD | The Ghost Protocol</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0a0e27;
+        color: #00ff95;
+        font-family: "Roboto Mono", monospace;
+        overflow-x: hidden;
+      }
+
+      .scanline {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 255, 149, 0.03),
+          rgba(0, 255, 149, 0.03) 1px,
+          transparent 1px,
+          transparent 2px
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      header {
+        background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+        border-bottom: 2px solid #00ff95;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 0 20px rgba(0, 255, 149, 0.3);
+      }
+
+      header h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 2.5rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        text-shadow: 0 0 10px #00ff95;
+        margin-bottom: 5px;
+      }
+
+      header p {
+        color: #00f2ff;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+      }
+
+      .navigation {
+        background: #1a1f3a;
+        padding: 15px 20px;
+        border-bottom: 1px solid #00ff95;
+        position: relative;
+        z-index: 2;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .nav-link {
+        color: #00ff95;
+        text-decoration: none;
+        font-weight: bold;
+        padding: 10px 20px;
+        border: 2px solid #00ff95;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: "Orbitron", sans-serif;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        background: #00ff95;
+        color: #0a0e27;
+        box-shadow: 0 0 15px #00ff95;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .metric-card {
+        background: linear-gradient(135deg, #1a1f3a 0%, #0f1428 100%);
+        border: 2px solid #00ff95;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 15px rgba(0, 255, 149, 0.2);
+        transition: all 0.3s;
+      }
+
+      .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 25px rgba(0, 255, 149, 0.4);
+      }
+
+      .metric-card h3 {
+        font-family: "Orbitron", sans-serif;
+        color: #00f2ff;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+      }
+
+      .metric-value {
+        font-size: 2.5rem;
+        color: #00ff95;
+        font-weight: bold;
+        text-shadow: 0 0 10px #00ff95;
+      }
+
+      .charts-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+      }
+
+      .chart-box {
+        background: linear-gradient(135deg, #1a1f3a 0%, #0f1428 100%);
+        border: 2px solid #00ff95;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 15px rgba(0, 255, 149, 0.2);
+      }
+
+      .chart-box h2 {
+        font-family: "Orbitron", sans-serif;
+        color: #00f2ff;
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      canvas {
+        max-height: 400px;
+      }
+
+      .locations-table {
+        background: linear-gradient(135deg, #1a1f3a 0%, #0f1428 100%);
+        border: 2px solid #00ff95;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 0 15px rgba(0, 255, 149, 0.2);
+        margin-top: 30px;
+      }
+
+      .locations-table h2 {
+        font-family: "Orbitron", sans-serif;
+        color: #00f2ff;
+        background: #0f1428;
+        padding: 15px 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 1.3rem;
+        border-bottom: 2px solid #00ff95;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: transparent;
+      }
+
+      table thead {
+        background: #1a1f3a;
+        border-bottom: 2px solid #00ff95;
+      }
+
+      table th {
+        color: #00f2ff;
+        padding: 15px;
+        text-align: left;
+        font-family: "Orbitron", sans-serif;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0, 255, 149, 0.2);
+        color: #00ff95;
+      }
+
+      table tr:hover {
+        background: rgba(0, 255, 149, 0.1);
+      }
+
+      .location-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border: 1px solid #00ff95;
+        border-radius: 3px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 1024px) {
+        .charts-container {
+          grid-template-columns: 1fr;
+        }
+
+        header h1 {
+          font-size: 1.8rem;
+        }
+      }
+
+      /* Chart.js custom colors */
+      .chart-context {
+        color: #00ff95;
+      }
+
+      .loading {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #00f2ff;
+        padding: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="scanline"></div>
+
+    <header>
+      <h1>⚔️ CRIME ANALYTICS DASHBOARD</h1>
+      <p>REAL-TIME CRIMINAL ACTIVITY ANALYSIS | MINORITY REPORT SYSTEM</p>
+    </header>
+
+    <nav class="navigation">
+      <a href="/" class="nav-link">GHOST CLIENT</a>
+      <a href="/dashboard" class="nav-link active">CRIME ANALYTICS</a>
+    </nav>
+
+    <div class="container">
+      <div class="metrics-grid" id="metrics">
+        <div class="metric-card">
+          <h3>Total Crímenes</h3>
+          <div class="metric-value" id="total-crimes">--</div>
+        </div>
+        <div class="metric-card">
+          <h3>Criminales Arrestados</h3>
+          <div class="metric-value" id="arrested-criminals">--</div>
+        </div>
+        <div class="metric-card">
+          <h3>Tasa de Resolución</h3>
+          <div class="metric-value" id="resolution-rate">--</div>
+        </div>
+        <div class="metric-card">
+          <h3>Estado del Sistema</h3>
+          <div class="metric-value" style="color: #00ff95">● ACTIVO</div>
+        </div>
+      </div>
+
+      <div class="charts-container">
+        <div class="chart-box">
+          <h2>Crímenes por Hora</h2>
+          <canvas id="crimesChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Distribución de Crímenes</h2>
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="locations-table">
+        <h2>Top Localizaciones - Actividad Criminal</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Localización</th>
+              <th>Tipo</th>
+              <th>Crímenes Reportados</th>
+              <th>Riesgo</th>
+            </tr>
+          </thead>
+          <tbody id="locations-body">
+            <tr>
+              <td colspan="4" class="loading">CARGANDO DATOS...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      let crimesChart = null;
+      let distributionChart = null;
+
+      async function loadCrimesData() {
+        try {
+          const response = await fetch("/api/crimes");
+          const data = await response.json();
+
+          // Actualizar métricas
+          document.getElementById("total-crimes").textContent =
+            data.total_crimes;
+          document.getElementById("arrested-criminals").textContent =
+            data.arrested_criminals;
+
+          const resolutionRate = Math.round(
+            (data.arrested_criminals / data.total_crimes) * 100,
+          );
+          document.getElementById("resolution-rate").textContent =
+            resolutionRate + "%";
+
+          // Gráfica de crímenes por hora
+          updateCrimesChart(data.crimes_by_hour);
+
+          // Gráfica de distribución
+          updateDistributionChart(data.crime_locations);
+
+          // Tabla de localizaciones
+          updateLocationsTable(data.crime_locations);
+        } catch (error) {
+          console.error("Error cargando datos:", error);
+        }
+      }
+
+      function updateCrimesChart(crimesData) {
+        const ctx = document.getElementById("crimesChart").getContext("2d");
+
+        if (crimesChart) {
+          crimesChart.destroy();
+        }
+
+        crimesChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: crimesData.map((d) => d.hour),
+            datasets: [
+              {
+                label: "Crímenes por Hora",
+                data: crimesData.map((d) => d.count),
+                borderColor: "#00ff95",
+                backgroundColor: "rgba(0, 255, 149, 0.1)",
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: "#00ff95",
+                pointBorderColor: "#00f2ff",
+                pointRadius: 4,
+                pointHoverRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#00ff95",
+                  font: { family: "'Roboto Mono'" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                ticks: { color: "#00f2ff" },
+                grid: { color: "rgba(0, 255, 149, 0.1)" },
+              },
+              x: {
+                ticks: { color: "#00f2ff" },
+                grid: { color: "rgba(0, 255, 149, 0.1)" },
+              },
+            },
+          },
+        });
+      }
+
+      function updateDistributionChart(locations) {
+        const ctx = document
+          .getElementById("distributionChart")
+          .getContext("2d");
+
+        if (distributionChart) {
+          distributionChart.destroy();
+        }
+
+        distributionChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: locations.map((l) => l.location),
+            datasets: [
+              {
+                label: "Crímenes por Localización",
+                data: locations.map((l) => l.crimes),
+                backgroundColor: "rgba(0, 255, 149, 0.3)",
+                borderColor: "#00ff95",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#00ff95",
+                  font: { family: "'Roboto Mono'" },
+                },
+              },
+            },
+            scales: {
+              y: {
+                ticks: { color: "#00f2ff" },
+                grid: { color: "rgba(0, 255, 149, 0.1)" },
+              },
+              x: {
+                ticks: { color: "#00f2ff" },
+                grid: { color: "rgba(0, 255, 149, 0.1)" },
+              },
+            },
+          },
+        });
+      }
+
+      function updateLocationsTable(locations) {
+        const tbody = document.getElementById("locations-body");
+        tbody.innerHTML = locations
+          .map(
+            (loc) => `
+                <tr>
+                    <td>${loc.location}</td>
+                    <td><span class="location-badge">${loc.type}</span></td>
+                    <td>${loc.crimes}</td>
+                    <td>${loc.crimes > 10 ? "🔴 ALTO" : loc.crimes > 5 ? "🟡 MEDIO" : "🟢 BAJO"}</td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      // Cargar datos al abrir la página
+      loadCrimesData();
+
+      // Actualizar cada 5 segundos
+      setInterval(loadCrimesData, 5000);
+    </script>
+  </body>
+</html>

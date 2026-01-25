@@ -1,0 +1,12 @@
+[MESSAGES CONTROL]
+# Disable warnings for PyScript files
+disable=
+    undefined-variable,  # For window, document, console, pyfetch, etc. in main.py
+    global-statement,    # Global statements are used in main.py for PyScript
+    unused-variable,     # Loop variable 'i' in main.py
+
+[DESIGN]
+# Adjust limits
+max-args=6
+max-attributes=8
+max-locals=20

@@ -1,183 +1,403 @@
 {
-    "nodes": [
-        {
-            "id": "CIT_1",
-            "name": "Arthur Dent",
-            "type": "citizen",
-            "born": 1978,
-            "status": "ACTIVE",
-            "job": "Journalist",
-            "criminal_degree": 0.1,
-            "risk_seed": 0.25,
-            "embedding": [
-                0.1,
-                0.2,
-                0.3
-            ],
-            "preCrimeRiskScore": 0.15,
-            "x": -250,
-            "y": 100,
-            "z": 0
-        },
-        {
-            "id": "CIT_2",
-            "name": "Ford Prefect",
-            "type": "citizen",
-            "born": 1970,
-            "status": "ACTIVE",
-            "job": "Researcher",
-            "criminal_degree": 0.4,
-            "risk_seed": 0.5,
-            "embedding": [
-                0.5,
-                0.1,
-                0.9
-            ],
-            "preCrimeRiskScore": 0.45,
-            "x": -150,
-            "y": 150,
-            "z": 0
-        },
-        {
-            "id": "CIT_3",
-            "name": "Zaphod Beeblebrox",
-            "type": "citizen",
-            "born": 1965,
-            "status": "ACTIVE",
-            "job": "President",
-            "criminal_degree": 0.8,
-            "risk_seed": 0.9,
-            "embedding": [
-                0.9,
-                0.9,
-                0.1
-            ],
-            "preCrimeRiskScore": 0.85,
-            "x": -50,
-            "y": 120,
-            "z": 0
-        },
-        {
-            "id": "LOC_1",
-            "name": "District 4 Police",
-            "type": "police",
-            "latitude": 40.4168,
-            "longitude": -3.7038,
-            "env_risk": 0.1,
-            "historical_crime_count": 5,
-            "x": 200,
-            "y": -100,
-            "z": 0
-        },
-        {
-            "id": "LOC_2",
-            "name": "Central Bank",
-            "type": "bank",
-            "latitude": 40.4180,
-            "longitude": -3.7000,
-            "env_risk": 0.4,
-            "historical_crime_count": 2,
-            "x": 0,
-            "y": 0,
-            "z": 0
-        },
-        {
-            "id": "LOC_3",
-            "name": "Alley Network",
-            "type": "blindspot",
-            "latitude": 40.4150,
-            "longitude": -3.7050,
-            "env_risk": 0.8,
-            "historical_crime_count": 15,
-            "x": 180,
-            "y": 50,
-            "z": 0
-        },
-        {
-            "id": "LOC_4",
-            "name": "Sotano Bar",
-            "type": "hideout",
-            "latitude": 40.4140,
-            "longitude": -3.7080,
-            "env_risk": 0.9,
-            "historical_crime_count": 20,
-            "x": -200,
-            "y": 50,
-            "z": 0
-        },
-        {
-            "id": "LOC_5",
-            "name": "Market Square",
-            "type": "junction",
-            "latitude": 40.4190,
-            "longitude": -3.7010,
-            "env_risk": 0.3,
-            "historical_crime_count": 8,
-            "x": -120,
-            "y": 30,
-            "z": 0
-        },
-        {
-            "id": "VIS_1",
-            "name": "Red Ball Prediction",
-            "type": "vision",
-            "probability": 0.92,
-            "status": "OPEN",
-            "timestamp": "2026-01-22T22:00:00",
-            "model": "RedGAN_v1.0",
-            "x": 0,
-            "y": 50,
-            "z": 0
-        }
+  "nodes": [
+    {
+      "id": "CIT_1",
+      "name": "Arthur Dent",
+      "type": "citizen",
+      "born": 1978,
+      "status": "ACTIVE",
+      "job": "Journalist",
+      "criminal_degree": 0.1,
+      "risk_seed": 0.25,
+      "embedding": [0.1, 0.2, 0.3],
+      "preCrimeRiskScore": 0.15,
+      "x": -250,
+      "y": 100,
+      "z": 0
+    },
+    {
+      "id": "CIT_2",
+      "name": "Ford Prefect",
+      "type": "citizen",
+      "born": 1970,
+      "status": "ACTIVE",
+      "job": "Researcher",
+      "criminal_degree": 0.4,
+      "risk_seed": 0.5,
+      "embedding": [0.5, 0.1, 0.9],
+      "preCrimeRiskScore": 0.45,
+      "x": -150,
+      "y": 150,
+      "z": 0
+    },
+    {
+      "id": "CIT_3",
+      "name": "Zaphod Beeblebrox",
+      "type": "citizen",
+      "born": 1965,
+      "status": "ACTIVE",
+      "job": "President",
+      "criminal_degree": 0.8,
+      "risk_seed": 0.9,
+      "embedding": [0.9, 0.9, 0.1],
+      "preCrimeRiskScore": 0.85,
+      "x": -50,
+      "y": 120,
+      "z": 0
+    },
+    {
+      "id": "LOC_1",
+      "name": "District 4 Police",
+      "type": "police",
+      "latitude": 40.4168,
+      "longitude": -3.7038,
+      "env_risk": 0.1,
+      "historical_crime_count": 5,
+      "x": 200,
+      "y": -100,
+      "z": 0
+    },
+    {
+      "id": "LOC_2",
+      "name": "Central Bank",
+      "type": "bank",
+      "latitude": 40.418,
+      "longitude": -3.7,
+      "env_risk": 0.4,
+      "historical_crime_count": 2,
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "id": "LOC_3",
+      "name": "Alley Network",
+      "type": "blindspot",
+      "latitude": 40.415,
+      "longitude": -3.705,
+      "env_risk": 0.8,
+      "historical_crime_count": 15,
+      "x": 180,
+      "y": 50,
+      "z": 0
+    },
+    {
+      "id": "LOC_4",
+      "name": "Sotano Bar",
+      "type": "hideout",
+      "latitude": 40.414,
+      "longitude": -3.708,
+      "env_risk": 0.9,
+      "historical_crime_count": 20,
+      "x": -200,
+      "y": 50,
+      "z": 0
+    },
+    {
+      "id": "LOC_5",
+      "name": "Market Square",
+      "type": "junction",
+      "latitude": 40.419,
+      "longitude": -3.701,
+      "env_risk": 0.3,
+      "historical_crime_count": 8,
+      "x": -120,
+      "y": 30,
+      "z": 0
+    },
+    {
+      "id": "LOC_6",
+      "name": "North Station",
+      "type": "station",
+      "latitude": 40.42,
+      "longitude": -3.698,
+      "env_risk": 0.5,
+      "historical_crime_count": 12,
+      "x": 100,
+      "y": -50,
+      "z": 0
+    },
+    {
+      "id": "LOC_7",
+      "name": "East Bank Plaza",
+      "type": "bank",
+      "latitude": 40.416,
+      "longitude": -3.695,
+      "env_risk": 0.6,
+      "historical_crime_count": 8,
+      "x": 150,
+      "y": 100,
+      "z": 0
+    },
+    {
+      "id": "LOC_8",
+      "name": "Underground Tunnel",
+      "type": "hideout",
+      "latitude": 40.413,
+      "longitude": -3.71,
+      "env_risk": 0.95,
+      "historical_crime_count": 25,
+      "x": -180,
+      "y": -80,
+      "z": 0
+    },
+    {
+      "id": "LOC_9",
+      "name": "West Blindspot",
+      "type": "blindspot",
+      "latitude": 40.4145,
+      "longitude": -3.712,
+      "env_risk": 0.85,
+      "historical_crime_count": 18,
+      "x": -250,
+      "y": -30,
+      "z": 0
+    },
+    {
+      "id": "LOC_10",
+      "name": "South Police HQ",
+      "type": "police",
+      "latitude": 40.41,
+      "longitude": -3.702,
+      "env_risk": 0.05,
+      "historical_crime_count": 1,
+      "x": 50,
+      "y": -150,
+      "z": 0
+    },
+    {
+      "id": "CIT_4",
+      "name": "Marvin Android",
+      "type": "citizen",
+      "born": 2000,
+      "status": "ACTIVE",
+      "job": "Robot",
+      "criminal_degree": 0.05,
+      "risk_seed": 0.1,
+      "embedding": [0.2, 0.1, 0.1],
+      "preCrimeRiskScore": 0.08,
+      "x": 50,
+      "y": 80,
+      "z": 0
+    },
+    {
+      "id": "CIT_5",
+      "name": "Trillian McMillan",
+      "type": "citizen",
+      "born": 1985,
+      "status": "ACTIVE",
+      "job": "Astrophysicist",
+      "criminal_degree": 0.2,
+      "risk_seed": 0.3,
+      "embedding": [0.3, 0.4, 0.2],
+      "preCrimeRiskScore": 0.25,
+      "x": -100,
+      "y": 100,
+      "z": 0
+    },
+    {
+      "id": "CIT_6",
+      "name": "Slartibartfast",
+      "type": "citizen",
+      "born": 1950,
+      "status": "ACTIVE",
+      "job": "Planet Designer",
+      "criminal_degree": 0.6,
+      "risk_seed": 0.65,
+      "embedding": [0.6, 0.7, 0.5],
+      "preCrimeRiskScore": 0.62,
+      "x": 120,
+      "y": 60,
+      "z": 0
+    },
+    {
+      "id": "VIS_1",
+      "name": "Red Ball Prediction",
+      "type": "vision",
+      "probability": 0.92,
+      "status": "OPEN",
+      "timestamp": "2026-01-22T22:00:00",
+      "model": "RedGAN_v1.0",
+      "x": 0,
+      "y": 50,
+      "z": 0
+    },
+    {
+      "id": "VIS_2",
+      "name": "Blue Ball Vision",
+      "type": "vision",
+      "probability": 0.78,
+      "status": "OPEN",
+      "timestamp": "2026-01-22T23:30:00",
+      "model": "BlueGAN_v1.0",
+      "x": -50,
+      "y": -20,
+      "z": 0
+    }
+  ],
+  "links": [
+    {
+      "source": "CIT_1",
+      "target": "CIT_2",
+      "type": "KNOWS",
+      "riesgo": 0.1
+    },
+    {
+      "source": "CIT_2",
+      "target": "CIT_3",
+      "type": "INTERACTS_WITH",
+      "riesgo": 0.4
+    },
+    {
+      "source": "CIT_3",
+      "target": "VIS_1",
+      "type": "APPEARS_IN",
+      "riesgo": 0.9
+    },
+    {
+      "source": "VIS_1",
+      "target": "LOC_2",
+      "type": "TARGETS",
+      "riesgo": 1.0
+    },
+    {
+      "source": "LOC_4",
+      "target": "LOC_5",
+      "type": "CONECTA_CON",
+      "riesgo": 0.2
+    },
+    {
+      "source": "LOC_5",
+      "target": "LOC_2",
+      "type": "CONECTA_CON",
+      "riesgo": 0.5
+    },
+    {
+      "source": "LOC_2",
+      "target": "LOC_1",
+      "type": "CONECTA_CON",
+      "riesgo": 0.9
+    },
+    {
+      "source": "LOC_3",
+      "target": "LOC_5",
+      "type": "CONECTA_CON",
+      "riesgo": 0.4,
+      "baseRiesgo": 0.4
+    },
+    {
+      "source": "LOC_1",
+      "target": "LOC_6",
+      "type": "CONECTA_CON",
+      "riesgo": 0.3,
+      "baseRiesgo": 0.3
+    },
+    {
+      "source": "LOC_6",
+      "target": "LOC_7",
+      "type": "CONECTA_CON",
+      "riesgo": 0.5,
+      "baseRiesgo": 0.5
+    },
+    {
+      "source": "LOC_7",
+      "target": "LOC_2",
+      "type": "CONECTA_CON",
+      "riesgo": 0.4,
+      "baseRiesgo": 0.4
+    },
+    {
+      "source": "LOC_4",
+      "target": "LOC_8",
+      "type": "CONECTA_CON",
+      "riesgo": 0.7,
+      "baseRiesgo": 0.7
+    },
+    {
+      "source": "LOC_8",
+      "target": "LOC_9",
+      "type": "CONECTA_CON",
+      "riesgo": 0.8,
+      "baseRiesgo": 0.8
+    },
+    {
+      "source": "LOC_9",
+      "target": "LOC_3",
+      "type": "CONECTA_CON",
+      "riesgo": 0.6,
+      "baseRiesgo": 0.6
+    },
+    {
+      "source": "LOC_10",
+      "target": "LOC_1",
+      "type": "CONECTA_CON",
+      "riesgo": 0.2,
+      "baseRiesgo": 0.2
+    },
+    {
+      "source": "CIT_4",
+      "target": "CIT_1",
+      "type": "KNOWS",
+      "riesgo": 0.1
+    },
+    {
+      "source": "CIT_5",
+      "target": "CIT_2",
+      "type": "KNOWS",
+      "riesgo": 0.2
+    },
+    {
+      "source": "CIT_6",
+      "target": "CIT_3",
+      "type": "INTERACTS_WITH",
+      "riesgo": 0.6
+    },
+    {
+      "source": "VIS_2",
+      "target": "LOC_7",
+      "type": "TARGETS",
+      "riesgo": 0.8
+    }
+  ],
+  "crimes": {
+    "total_reported": 267,
+    "arrested": 89,
+    "by_location": [
+      { "location_id": "LOC_2", "count": 15, "type": "Robbery" },
+      { "location_id": "LOC_3", "count": 22, "type": "Theft" },
+      { "location_id": "LOC_4", "count": 31, "type": "Illegal Activities" },
+      { "location_id": "LOC_7", "count": 18, "type": "Fraud" },
+      { "location_id": "LOC_8", "count": 28, "type": "Assault" },
+      { "location_id": "LOC_9", "count": 25, "type": "Vandalism" },
+      { "location_id": "LOC_6", "count": 14, "type": "Pickpocketing" },
+      { "location_id": "LOC_1", "count": 8, "type": "Disturbance" },
+      { "location_id": "LOC_10", "count": 5, "type": "Minor Offenses" }
     ],
-    "links": [
-        {
-            "source": "CIT_1",
-            "target": "CIT_2",
-            "type": "KNOWS",
-            "riesgo": 0.1
-        },
-        {
-            "source": "CIT_2",
-            "target": "CIT_3",
-            "type": "INTERACTS_WITH",
-            "riesgo": 0.4
-        },
-        {
-            "source": "CIT_3",
-            "target": "VIS_1",
-            "type": "APPEARS_IN",
-            "riesgo": 0.9
-        },
-        {
-            "source": "VIS_1",
-            "target": "LOC_2",
-            "type": "TARGETS",
-            "riesgo": 1.0
-        },
-        {
-            "source": "LOC_4",
-            "target": "LOC_5",
-            "type": "CONECTA_CON",
-            "riesgo": 0.2
-        },
-        {
-            "source": "LOC_5",
-            "target": "LOC_2",
-            "type": "CONECTA_CON",
-            "riesgo": 0.5
-        },
-        {
-            "source": "LOC_2",
-            "target": "LOC_1",
-            "type": "CONECTA_CON",
-            "riesgo": 0.9
-        },
-        {
-            "source": "LOC_3",
-            "target": "LOC_5",
-            "type": "CONECTA_CON",
-            "riesgo": 0.4
-        }
+    "by_hour": [
+      { "hour": 0, "count": 8 },
+      { "hour": 1, "count": 5 },
+      { "hour": 2, "count": 3 },
+      { "hour": 3, "count": 2 },
+      { "hour": 4, "count": 4 },
+      { "hour": 5, "count": 6 },
+      { "hour": 6, "count": 9 },
+      { "hour": 7, "count": 12 },
+      { "hour": 8, "count": 15 },
+      { "hour": 9, "count": 18 },
+      { "hour": 10, "count": 16 },
+      { "hour": 11, "count": 14 },
+      { "hour": 12, "count": 19 },
+      { "hour": 13, "count": 17 },
+      { "hour": 14, "count": 20 },
+      { "hour": 15, "count": 22 },
+      { "hour": 16, "count": 18 },
+      { "hour": 17, "count": 16 },
+      { "hour": 18, "count": 14 },
+      { "hour": 19, "count": 11 },
+      { "hour": 20, "count": 13 },
+      { "hour": 21, "count": 10 },
+      { "hour": 22, "count": 9 },
+      { "hour": 23, "count": 6 }
     ]
+  }
 }
