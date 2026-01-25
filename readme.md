@@ -12,32 +12,32 @@ El sistema ha evolucionado de una simple visualización a una infraestructura in
 ```mermaid
 graph TD
     subgraph EDGE ["Edge / Sensors"]
-        S[loT Sensors / Drones] -->|JSON| N[Nuclio Function]
+        S["loT Sensors / Drones"] -->|JSON| N["Nuclio Function"]
         N -->|Anonymization & Jitter| N
-        N -->|Apache Arrow Buffer| K[Kafka / Event Bus]
+        N -->|Apache Arrow Buffer| K["Kafka / Event Bus"]
     end
 
     subgraph CORE ["HPC Core (GPU Driven)"]
-        K -->|Ingest Stream| R[RAPIDS (cuDF)]
-        R -->|Data Wrangling| P[Parquet Lake]
-        R -->|Spatial Indexing| Z[Zarr / Xarray Cubes]
+        K -->|Ingest Stream| R["RAPIDS (cuDF)"]
+        R -->|Data Wrangling| P["Parquet Lake"]
+        R -->|Spatial Indexing| Z["Zarr / Xarray Cubes"]
         
         subgraph AI ["AI Engine"]
-            P -->|Tabular Feats| XG[XGBoost (Risk)]
-            Z -->|Spatial Graph| GAT[Graph Attention Network (Node Embed)]
-            XG -->|Logits| ENS[Ensemble]
+            P -->|Tabular Feats| XG["XGBoost (Risk)"]
+            Z -->|Spatial Graph| GAT["Graph Attention Network (Node Embed)"]
+            XG -->|Logits| ENS["Ensemble"]
             GAT -->|Embeddings| ENS
-            O[Optuna] -.->|Hyperparam Tuning| XG & GAT
-            KF[Kubeflow] -->|Orchestration| O
+            O["Optuna"] -.->|Hyperparam Tuning| XG & GAT
+            KF["Kubeflow"] -->|Orchestration| O
         end
     end
 
     subgraph VIS ["Command Center"]
-        ENS -->|Inference Stream| D[Deck.gl (3D Map)]
-        ENS -->|Aggregates| BK[Bokeh (Forense)]
-        ENS -->|KPIs| PN[Panel Dashboard]
+        ENS -->|Inference Stream| D["Deck.gl (3D Map)"]
+        ENS -->|Aggregates| BK["Bokeh (Forense)"]
+        ENS -->|KPIs| PN["Panel Dashboard"]
         
-        U[User / CDO] -->|Natural Language| LM[Lumen Chatbot]
+        U["User / CDO"] -->|Natural Language| LM["Lumen Chatbot"]
         LM -->|Query| PN
     end
 ```
