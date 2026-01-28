@@ -2,6 +2,7 @@ import numpy as np
 import random
 from app.evasion.math.heuristics import calculate_heuristic_cost
 from app.repositories.location_repo import location_repo
+import app.core.hardware_switch as hw
 
 class RoutingService:
     """
@@ -15,17 +16,28 @@ class RoutingService:
         En una impl real, esto haría A* sobre el grafo de Neo4j usando Numba para los pesos.
         """
         # 1. Obtener ubicaciones
-        start = await location_repo.find_by_id(start_loc_id)
-        end = await location_repo.find_by_id(end_loc_id)
+        start = None
+        end = None
+        
+        if hw.DEMO_MODE:
+            # Mock de ubicaciones
+            start = {"lat": 40.4168, "lon": -3.7038, "name": "Puerta del Sol"}
+            end = {"lat": 40.4150, "lon": -3.6840, "name": "Parque de El Retiro"}
+        else:
+            start = await location_repo.find_by_id(start_loc_id)
+            end = await location_repo.find_by_id(end_loc_id)
         
         if not start or not end:
             # FALLBACK: Si no existen los IDs específicos (LOC_SOL), pillamos dos al azar para la DEMO
-            all_locs = await location_repo.find_all(limit=10)
-            if len(all_locs) >= 2:
-                start = all_locs[0]
-                end = all_locs[1]
+            if not hw.DEMO_MODE:
+                all_locs = await location_repo.find_all(limit=10)
+                if len(all_locs) >= 2:
+                    start = all_locs[0]
+                    end = all_locs[1]
+                else:
+                    return None
             else:
-                return None
+                 return None
 
         # 2. Simular generación de nodos intermedios (City Graph)
         # En una ruta real, estos vendrían de Neo4j

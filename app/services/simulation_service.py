@@ -5,6 +5,7 @@ from app.repositories.citizen_repo import citizen_repo
 from app.repositories.location_repo import location_repo
 from app.repositories.vision_repo import vision_repo
 from app.models.schemas_vision import VisionCreate
+import app.core.hardware_switch as hw
 
 class SimulationService:
     """
@@ -15,6 +16,13 @@ class SimulationService:
         """Ejecuta un 'tick' de la simulación."""
         print("Simulando actividad en la ciudad...")
         
+        if hw.DEMO_MODE:
+            # En demo mode, no tocamos la BD.
+            # Podríamos modificar un estado en memoria si quisiéramos,
+            # pero para la visualización basta con que no falle.
+            print("DEMO MODE: Simulating activity (No DB Check)")
+            return {"processed": 10, "crimes": 2, "note": "Simulation skipped in Demo Mode"}
+
         # 1. Obtener actores aleatorios (Muestreo)
         citizens = await citizen_repo.find_all(limit=50)
         locations = await location_repo.find_all(limit=20)

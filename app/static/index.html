@@ -376,6 +376,10 @@
                 );
             });
 
+        // Configure forces AFTER Graph is created (proper way to set d3 forces)
+        Graph.d3Force('link').distance(100);  // Longer links for spread
+        Graph.d3Force('charge').strength(-200);  // Repulsion between nodes
+
         async function fetchGraphData() {
             try {
                 const res = await fetch('/visions/graph?limit=300');

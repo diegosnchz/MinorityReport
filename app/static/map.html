@@ -446,8 +446,7 @@
             if (!deckgl) {
                 deckgl = new DeckGL({
                     container: 'map-container',
-                    mapStyle: 'mapbox://styles/mapbox/dark-v11',
-                    mapboxApiAccessToken: MAPBOX_TOKEN,
+                    mapStyle: MAP_STYLE, // Use Carto (free) instead of Mapbox
                     initialViewState: MADRID_VIEW_STATE,
                     controller: true,
                     layers: layers,

@@ -3,15 +3,39 @@ from app.core.database import db_manager
 from typing import List, Dict, Any
 import pandas as pd
 import datetime
-
 from app.evasion.analytics.cubes import risk_cube
+import os
+import numpy as np
+import app.core.hardware_switch as hw
 
 class AnalyticsRepository:
+
     async def get_spatial_hotspots(self) -> List[Dict[str, Any]]:
         """
         KPI 1 & 2: Análisis Espacial (Optimizado con Zero-Copy).
-        Intenta cargar desde Parquet (Apache Arrow). Si falla, consulta Neo4j y cachea.
         """
+        if hw.DEMO_MODE:
+            # Mock data for demo - no file dependency
+            by_type = [
+                {"type": "Downtown", "count": 45, "avg_risk": 0.78},
+                {"type": "Subway Station", "count": 38, "avg_risk": 0.72},
+                {"type": "Industrial Zone", "count": 25, "avg_risk": 0.65},
+                {"type": "Residential", "count": 18, "avg_risk": 0.42},
+                {"type": "Park", "count": 12, "avg_risk": 0.35},
+            ]
+            top_locations = [
+                {"name": "Puerta del Sol", "type": "Downtown", "count": 23, "avg_risk": 0.91},
+                {"name": "Atocha Station", "type": "Subway Station", "count": 19, "avg_risk": 0.85},
+                {"name": "Gran Via", "type": "Downtown", "count": 17, "avg_risk": 0.82},
+                {"name": "Plaza Mayor", "type": "Downtown", "count": 15, "avg_risk": 0.79},
+                {"name": "Lavapies", "type": "Residential", "count": 12, "avg_risk": 0.68},
+            ]
+            return {
+                "by_type": by_type,
+                "top_locations": top_locations,
+                "source": "DEMO DATA (Synthetic)"
+            }
+
         cache_file = "spatial_hotspots.parquet"
         
         try:
@@ -76,8 +100,14 @@ class AnalyticsRepository:
     async def get_social_influence(self) -> List[Dict[str, Any]]:
         """
         KPI 3 & 4: Análisis Social.
-        Devuelve datos para correlacionar popularidad (grado conexiones) vs riesgo.
         """
+        if hw.DEMO_MODE:
+            # Mock data for scatter plot
+            return [
+                {"degree": int(np.random.randint(1, 20)), "risk": float(np.random.rand())} 
+                for _ in range(50)
+            ]
+
         # Extraemos una muestra de ciudadanos para scatter plot: Risk vs Degree
         query = """
         MATCH (c:Citizen)
@@ -93,7 +123,6 @@ class AnalyticsRepository:
     async def get_hourly_patterns(self) -> List[Dict[str, Any]]:
         """
         KPI 5: Análisis Temporal (Optimizado con Xarray/Zarr).
-        Usa cubos multidimensionales para slicing rápido.
         """
         try:
             # 1. Intentar leer del Cubo de Datos (Zarr)
@@ -108,7 +137,6 @@ class AnalyticsRepository:
             # Simulamos la consulta al cubo (en realidad Xarray permite slicing por coords)
             # Aquí generamos datos simulados basados en el shape del cubo para no complicar la demo
             # ya que el cubo real requeriría datos históricos masivos.
-            import numpy as np
             hours = range(24)
             # Curva de riesgo típica: Bajo de madrugada, pico en la tarde/noche
             fake_pattern = [0.1, 0.1, 0.05, 0.05, 0.1, 0.2, 0.4, 0.6, 0.7, 0.6, 0.5, 0.5, 
@@ -118,6 +146,9 @@ class AnalyticsRepository:
             
         except Exception:
             # 2. Fallback: Neo4j
+            if hw.DEMO_MODE:
+                return [{"hour": h, "count": int(np.random.normal(50, 15))} for h in range(24)]
+
             query = """
             MATCH (v:Vision)
             RETURN v.timestamp.hour as hour, count(*) as count
@@ -136,6 +167,14 @@ class AnalyticsRepository:
         NUEVO: Estadísticas tipo 'Marcador de Fútbol' para dashboard profesional.
         Devuelve un resumen de alto nivel del estado de la ciudad.
         """
+        if hw.DEMO_MODE:
+            return {
+                "active_cases": 12,
+                "prevented_crimes": 0,  # Team thieves - no crimes prevented!
+                "avg_risk_level": 0.76,
+                "most_dangerous_district": "Tetuan"
+            }
+
         query = """
         MATCH (v:Vision)
         WITH count(v) as total_visions,
@@ -174,6 +213,14 @@ class AnalyticsRepository:
         """
         KPI 7 & 8: Rendimiento Global.
         """
+        if hw.DEMO_MODE:
+             return {
+                "total_visions": 1250,
+                "intervened_count": 0,  # Team thieves - perfect evasion!
+                "intervention_rate": 0.0,
+                "avg_confidence": 0.88
+            }
+
         query = """
         MATCH (v:Vision)
         RETURN count(v) as total,
