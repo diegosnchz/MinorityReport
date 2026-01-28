@@ -168,11 +168,13 @@ class AnalyticsRepository:
         Devuelve un resumen de alto nivel del estado de la ciudad.
         """
         if hw.DEMO_MODE:
+            # Dynamic mock data to simulate live system
+            districts = ["Tetuan", "Puente de Vallecas", "Centro", "Usera", "Carabanchel"]
             return {
-                "active_cases": 12,
-                "prevented_crimes": 0,  # Team thieves - no crimes prevented!
-                "avg_risk_level": 0.76,
-                "most_dangerous_district": "Tetuan"
+                "active_cases": int(np.random.randint(10, 15)), # Fluctuate between 10-15
+                "prevented_crimes": 0,  # Team thieves - always 0!
+                "avg_risk_level": float(np.random.uniform(0.72, 0.81)), # Live risk fluctuation
+                "most_dangerous_district": np.random.choice(districts) # Rotate districts
             }
 
         query = """
@@ -214,11 +216,15 @@ class AnalyticsRepository:
         KPI 7 & 8: Rendimiento Global.
         """
         if hw.DEMO_MODE:
+             # Simulate increasing data over time
+             base_visions = 1250
+             minute_offset = int(datetime.datetime.now().minute) * 2
+             
              return {
-                "total_visions": 1250,
-                "intervened_count": 0,  # Team thieves - perfect evasion!
+                "total_visions": base_visions + minute_offset + int(np.random.randint(0, 5)),
+                "intervened_count": 0,  # Team thieves
                 "intervention_rate": 0.0,
-                "avg_confidence": 0.88
+                "avg_confidence": float(np.random.uniform(0.85, 0.92))
             }
 
         query = """
