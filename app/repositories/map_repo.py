@@ -10,22 +10,27 @@ class MapRepository:
         Retorna [ {pos: [lon, lat], weight: float}, ... ]
         """
         if hw.DEMO_MODE:
-            # Generate synthetic heatmap data for Madrid
+            # Generate synthetic heatmap data spread across Madrid
             data = []
-            # Create hotspots around key Madrid locations
+            # Create hotspots across different areas of Madrid
             hotspots = [
                 {"lat": 40.4168, "lon": -3.7038, "base_weight": 0.8},  # Puerta del Sol
                 {"lat": 40.4073, "lon": -3.6937, "base_weight": 0.7},  # Atocha
                 {"lat": 40.4200, "lon": -3.7050, "base_weight": 0.6},  # Gran Via
                 {"lat": 40.4150, "lon": -3.6840, "base_weight": 0.5},  # Retiro
                 {"lat": 40.4300, "lon": -3.7100, "base_weight": 0.65}, # Tetuan
+                {"lat": 40.4500, "lon": -3.6900, "base_weight": 0.5},  # Chamartin (north)
+                {"lat": 40.3900, "lon": -3.7000, "base_weight": 0.55}, # Usera (south)
+                {"lat": 40.4100, "lon": -3.7400, "base_weight": 0.45}, # Casa de Campo (west)
+                {"lat": 40.4250, "lon": -3.6600, "base_weight": 0.4},  # Salamanca (east)
+                {"lat": 40.4400, "lon": -3.7200, "base_weight": 0.5},  # Cuatro Caminos
             ]
             
             for hotspot in hotspots:
-                # Create cluster of points around each hotspot
-                for _ in range(15):
-                    lat_offset = np.random.normal(0, 0.005)
-                    lon_offset = np.random.normal(0, 0.005)
+                # Create cluster of points around each hotspot - wider spread
+                for _ in range(8):  # Fewer points per hotspot
+                    lat_offset = np.random.normal(0, 0.015)  # Much wider spread
+                    lon_offset = np.random.normal(0, 0.015)
                     weight = hotspot["base_weight"] + np.random.uniform(-0.2, 0.2)
                     data.append({
                         "coordinates": [

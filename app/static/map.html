@@ -408,8 +408,9 @@
                     data: heatData,
                     pickable: true,
                     extruded: true,
-                    radius: 200,
-                    elevationScale: 4,
+                    radius: 300,  // Thinner hexagons for elegant look
+                    elevationScale: 3,  // Taller bars (elegant height)
+                    elevationRange: [0, 1000],  // Allow taller bars
                     getPosition: d => d.coordinates,
                     getElevationWeight: d => d.weight,
                     colorRange: [
