@@ -3,13 +3,11 @@ import pyarrow.parquet as pq
 import pandas as pd
 import logging
 import os
+from app.core import hardware_switch as hw
 
-try:
-    import cudf
-    HAS_GPU = True
-except ImportError:
-    HAS_GPU = False
-    logging.warning("NVIDIA RAPIDS (cuDF) not found. Falling back to CPU/Pandas.")
+# Alias for convenience
+HAS_GPU = hw.HAS_GPU
+cudf = hw.cudf
 
 class EvasionDataLoader:
     """
@@ -33,6 +31,10 @@ class EvasionDataLoader:
         Carga datos usando Zero-Copy.
         Si hay GPU, usa cuDF para leer el buffer de Arrow directamente.
         """
+        if hw.DEMO_MODE:
+            logging.info("DEMO MODE: Loading synthetic data instead of production dataset.")
+            filename = "demo_data.parquet"
+            
         path = os.path.join(self.data_dir, filename)
         if not os.path.exists(path):
             raise FileNotFoundError(f"Data file not found: {path}")

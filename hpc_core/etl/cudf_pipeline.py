@@ -1,15 +1,12 @@
-
 # hpc_core/etl/cudf_pipeline.py
 import pyarrow as pa
 import io
+from app.core import hardware_switch as hw
 
 # We wrap RAPIDS imports to avoid crashing if run on a non-GPU dev machine.
 # But for PRODUCTION, this code assumes `cudf` is available.
-try:
-    import cudf
-except ImportError:
-    print("WARNING: RAPIDS (cuDF) not found. Running in CPU Mock Mode for testing.")
-    cudf = None
+# Hardware Switch handles fallback logging.
+cudf = hw.cudf
 
 def ingest_arrow_stream_to_gpu(arrow_bytes):
     """
@@ -30,7 +27,7 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
     
     source_stream = io.BytesIO(arrow_bytes)
     
-    if cudf:
+    if hw.HAS_GPU:
         # --- GPU PATH (PRODUCTION) ---
         print("INFO: Loading directly to GPU via RAPIDS...")
         
@@ -44,7 +41,7 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
         
         # Move to GPU implementation
         # cudf.DataFrame.from_arrow is zero-copy where possible
-        gdf = cudf.DataFrame.from_arrow(pa_table)
+        gdf = hw.cudf.DataFrame.from_arrow(pa_table)
         
         print(f"INFO: Data Loaded to VRAM. Shape: {gdf.shape}")
         

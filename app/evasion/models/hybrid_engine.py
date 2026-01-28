@@ -4,13 +4,7 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
 import logging
-
-try:
-    import cudf
-    HAS_GPU = True
-except ImportError:
-    HAS_GPU = False
-    logging.warning("Hybrid Engine: RAPIDS (cuDF) not found. Initializing in CPU Mode.")
+from app.core import hardware_switch as hw
 
 class HybridRiskEngine:
     """
@@ -21,7 +15,7 @@ class HybridRiskEngine:
     
     def __init__(self):
         # Configurar modelo con soporte GPU si es posible
-        params = {
+        base_params = {
             'n_estimators': 100, 
             'max_depth': 4, 
             'learning_rate': 0.05,
@@ -29,14 +23,14 @@ class HybridRiskEngine:
             'eval_metric': 'logloss'
         }
         
-        if HAS_GPU:
+        self.params = hw.get_xgboost_params(base_params)
+        
+        if hw.HAS_GPU:
             print("Hybrid Engine: Initializing in GPU Mode (RAPIDS+CUDA)")
-            params['tree_method'] = 'gpu_hist'
-            params['gpu_id'] = 0
         else:
             print("Hybrid Engine: Initializing in CPU Mode")
             
-        self.xgb_model = xgb.XGBClassifier(**params)
+        self.xgb_model = xgb.XGBClassifier(**self.params)
         self.explainer = None
         self.is_trained = False
 
@@ -52,7 +46,7 @@ class HybridRiskEngine:
         # pero 'gpu_predictor' puede usarse para inferencia
         self.explainer = shap.TreeExplainer(self.xgb_model)
         self.is_trained = True
-        print(f"Hybrid Engine: XGBoost Preprocessor Trained (GPU={HAS_GPU}).")
+        print(f"Hybrid Engine: XGBoost Preprocessor Trained (GPU={hw.HAS_GPU}).")
 
     def get_base_risk(self, node_features: Dict[str, Any]) -> float:
         """
@@ -64,10 +58,10 @@ class HybridRiskEngine:
             
         # Inferencia rápida
         # Si la entrada es un dict, convertimos a DF
-        if HAS_GPU:
+        if hw.HAS_GPU:
             # Para 1 fila, la sobrecarga de cuDF puede no valer la pena, 
             # pero mantenemos la coherencia si el pipeline es full GPU.
-            df = cudf.DataFrame([node_features])
+            df = hw.cudf.DataFrame([node_features])
         else:
             df = pd.DataFrame([node_features])
 
@@ -75,7 +69,7 @@ class HybridRiskEngine:
         preds = self.xgb_model.predict_proba(df)
         
         # Manejo de salida (numpy vs cupy/cudf)
-        if HAS_GPU:
+        if hw.HAS_GPU:
              # XGBoost devuelve numpy array incluso con input gpu si no se especifica output
              return float(preds[:, 1][0])
         else:
