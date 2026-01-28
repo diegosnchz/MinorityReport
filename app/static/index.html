@@ -10,15 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-blue: #38bdf8;
-            --accent-red: #f87171;
-            --accent-green: #4ade80;
-            --accent-purple: #a855f7;
+            /* STEALTH ENTERPRISE PALETTE */
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --card-border: #27272a;
+            --text-primary: #e4e4e7;
+            --text-secondary: #71717a;
+            --accent-selection: #ffffff;
+            --accent-danger: #ef4444;
+            --accent-safe: #10b981;
+            --mono-font: 'JetBrains Mono', monospace;
         }
 
         body {
@@ -29,115 +30,117 @@
             overflow: hidden;
         }
 
-        /* CHATBOT STYLES (MATCHING ANALYTICS THEME) */
+        /* CHATBOT - STEALTH STYLE */
         .chat-fab {
             position: absolute;
             bottom: 30px;
             right: 40px;
-            width: 60px;
-            height: 60px;
-            background: var(--accent-blue);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
-            color: #000;
+            font-size: 18px;
+            color: var(--text-primary);
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
-            transition: all 0.3s ease;
+            transition: border-color 0.2s;
             pointer-events: auto;
             z-index: 1000;
         }
 
         .chat-fab:hover {
-            transform: scale(1.1);
+            border-color: var(--accent-selection);
         }
 
         .chat-window {
             position: absolute;
-            bottom: 100px;
+            bottom: 90px;
             right: 40px;
-            width: 350px;
-            height: 500px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--accent-blue);
-            backdrop-filter: blur(16px);
-            border-radius: 12px;
+            width: 320px;
+            height: 450px;
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
             display: none;
             flex-direction: column;
             pointer-events: auto;
             z-index: 1000;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .chat-header {
-            background: rgba(56, 189, 248, 0.1);
-            padding: 15px;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
-            font-weight: bold;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--card-border);
+            font-weight: 500;
+            font-size: 0.85rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: var(--accent-blue);
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .chat-messages {
             flex-grow: 1;
-            padding: 15px;
+            padding: 16px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .msg {
             padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 80%;
-            line-height: 1.4;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            max-width: 85%;
+            line-height: 1.5;
         }
 
         .msg.system {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid var(--accent-blue);
+            background: var(--card-bg);
+            border-left: 2px solid var(--text-secondary);
             color: var(--text-primary);
         }
 
         .msg.user {
             align-self: flex-end;
-            background: rgba(56, 189, 248, 0.2);
-            border-right: 3px solid var(--accent-blue);
-            color: var(--accent-blue);
+            background: var(--card-bg);
+            border-right: 2px solid var(--accent-selection);
+            color: var(--text-primary);
             text-align: right;
         }
 
         .chat-input-area {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-top: 1px solid var(--card-border);
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .chat-input {
             flex-grow: 1;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
             border-radius: 4px;
-            padding: 8px;
+            padding: 8px 12px;
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
         }
 
         .chat-input:focus {
             outline: none;
-            border-color: var(--accent-blue);
+            border-color: var(--text-secondary);
         }
 
-        /* LAYOUT REFACTOR - CLEAN & SPACIOUS */
+        /* LAYOUT - MINIMAL */
         #graph-container {
             width: 100vw;
             height: 100vh;
@@ -145,29 +148,28 @@
 
         #ui-layer {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            bottom: 20px;
-            width: 350px;
+            top: 24px;
+            left: 24px;
+            bottom: 24px;
+            width: 320px;
             z-index: 10;
-            background: var(--card-bg);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid var(--card-border);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            padding: 25px;
+            border-radius: 4px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         h1 {
             margin: 0;
-            font-size: 1.4em;
+            font-size: 0.9rem;
+            font-weight: 500;
             text-transform: uppercase;
-            border-bottom: 2px solid var(--accent-blue);
-            padding-bottom: 15px;
-            letter-spacing: 2px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 16px;
+            letter-spacing: 1px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -175,116 +177,115 @@
         }
 
         h1 i {
-            color: var(--accent-blue);
+            color: var(--text-secondary);
         }
 
         #vision-feed {
             flex-grow: 1;
             overflow-y: auto;
-            padding-right: 10px;
+            padding-right: 8px;
         }
 
         .vision-card {
             border: 1px solid var(--card-border);
-            margin-bottom: 15px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-left: 3px solid var(--accent-red);
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--card-bg);
+            border-left: 2px solid var(--accent-danger);
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: border-color 0.15s;
         }
 
         .vision-card:hover {
-            border-color: var(--accent-blue);
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateX(5px);
+            border-color: var(--text-secondary);
         }
 
-        /* Risk Levels */
+        /* Risk Levels - Matte */
         .high-risk {
-            color: var(--accent-red);
-            font-weight: bold;
+            color: var(--accent-danger);
+            font-weight: 600;
+            font-family: var(--mono-font);
         }
 
         .medium-risk {
-            color: var(--accent-green);
+            color: var(--accent-safe);
+            font-family: var(--mono-font);
         }
 
-        /* Scrollbar styling */
+        /* Scrollbar - Minimal */
         #vision-feed::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         #vision-feed::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+            background: transparent;
         }
 
         #vision-feed::-webkit-scrollbar-thumb {
-            background: var(--accent-blue);
-            border-radius: 3px;
+            background: var(--card-border);
+            border-radius: 2px;
         }
 
         .nav-section {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             border-top: 1px solid var(--card-border);
-            padding-top: 20px;
+            padding-top: 16px;
         }
 
         button {
             width: 100%;
-            padding: 14px;
+            padding: 10px 16px;
             cursor: pointer;
             font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 0.95rem;
-            border: none;
-            background: var(--accent-blue);
-            color: #0f172a;
-            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 4px;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            height: auto;
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.2s;
+            gap: 8px;
+            transition: all 0.15s;
         }
 
         button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            border-color: var(--text-secondary);
+            background: #1a1a1a;
         }
 
         .btn-alert {
-            background: var(--accent-red);
-            color: white;
+            background: var(--accent-danger);
+            border-color: var(--accent-danger);
+            color: #000;
         }
 
         .btn-alert:hover {
-            opacity: 0.9;
-            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+            background: #dc2626;
+            border-color: #dc2626;
         }
 
         .btn-secondary {
             background: transparent;
             border: 1px solid var(--card-border);
-            color: var(--text-primary);
+            color: var(--text-secondary);
         }
 
         .btn-secondary:hover {
-            border-color: var(--accent-blue);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--accent-blue);
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
         }
 
         .btn-green {
-            background: var(--accent-blue);
-            /* Using Blue for Chat send to match theme */
+            background: var(--accent-safe);
+            border-color: var(--accent-safe);
             color: #000;
         }
     </style>
@@ -348,24 +349,24 @@
     <script>
         const graphElem = document.getElementById('graph-container');
         let Graph = ForceGraph3D()(graphElem)
-            .backgroundColor('#02040a') // Deepest Slate/Black for max contrast
-            .nodeRelSize(6) // Make spheres larger and more visible
+            .backgroundColor('#000000') // Pure black for stealth aesthetic
+            .nodeRelSize(4) // Smaller, minimal nodes
             .nodeColor(node => {
-                // If not in analysis, use a muted color
-                if (node.in_analysis === false) return '#334155'; // Muted Slate Gray
+                // Stealth palette: mostly grays, white for selection/danger
+                if (node.in_analysis === false) return '#27272a'; // Zinc dark
 
-                // High Contrast Palette for Analysis Nodes
                 const g = node.group ? node.group.toLowerCase() : '';
-                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Red
-                if (g === 'yellow' || g === 'location') return '#fbbf24'; // Amber
-                if (g === 'blue' || g === 'citizen') return '#38bdf8'; // Cyan
-                if (g === 'green' || g === 'safe') return '#4ade80'; // Green
-                return '#a855f7'; // Purple (Default/Unknown)
+                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Matte red
+                if (g === 'yellow' || g === 'location') return '#71717a'; // Medium gray
+                if (g === 'blue' || g === 'citizen') return '#a1a1aa'; // Light gray
+                if (g === 'green' || g === 'safe') return '#10b981'; // Matte emerald
+                if (g === 'purple') return '#e4e4e7'; // Near white for hubs
+                return '#52525b'; // Default zinc
             })
-            .nodeLabel(node => `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.label} (${node.type || 'Node'})</span>`)
-            .linkWidth(link => link.value > 0.5 ? 2 : 1)
-            .linkColor(() => '#ffffff') // White links for high visibility against dark bg
-            .linkOpacity(0.2) // Slight transparency to avoid visual noise but keep connections visible
+            .nodeLabel(node => `<span style="color: #e4e4e7; background: #121212; padding: 4px 8px; font-family: Inter, sans-serif; font-size: 12px; border: 1px solid #27272a;">${node.label || 'Node'}</span>`)
+            .linkWidth(1) // Thin lines
+            .linkColor(() => '#27272a') // Very faint gray links
+            .linkOpacity(0.4) // Subtle connections
             .onNodeClick(node => {
                 const distance = 40;
                 const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);

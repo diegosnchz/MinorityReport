@@ -18,15 +18,15 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-blue: #38bdf8;
-            --accent-red: #f87171;
-            --accent-green: #4ade80;
-            --accent-purple: #a855f7;
+            /* STEALTH ENTERPRISE PALETTE */
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --card-border: #27272a;
+            --text-primary: #e4e4e7;
+            --text-secondary: #71717a;
+            --accent-selection: #ffffff;
+            --accent-danger: #ef4444;
+            --accent-safe: #10b981;
         }
 
         body {
@@ -59,26 +59,27 @@
         }
 
         .top-bar {
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, transparent 100%);
-            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             pointer-events: auto;
+            border-bottom: 1px solid var(--card-border);
         }
 
         .brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .brand i {
-            color: var(--accent-blue);
-            filter: drop-shadow(0 0 8px var(--accent-blue));
+            color: var(--text-secondary);
         }
 
         .sidebar {
@@ -94,11 +95,10 @@
         }
 
         .glass-panel {
-            background: var(--card-bg);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid var(--card-border);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 4px;
+            padding: 16px;
         }
 
         .panel-header {
@@ -112,51 +112,57 @@
         }
 
         .vision-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-left: 3px solid var(--accent-red);
+            background: var(--card-bg);
+            border-left: 2px solid var(--accent-danger);
             padding: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-radius: 0 4px 4px 0;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: border-color 0.15s;
         }
 
         .vision-item:hover {
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--text-secondary);
         }
 
         .vision-prob {
             float: right;
-            font-weight: bold;
-            color: var(--accent-red);
+            font-weight: 600;
+            color: var(--accent-danger);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .control-btn {
             width: 100%;
-            padding: 12px;
-            background: var(--accent-blue);
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
+            padding: 10px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 8px;
+            transition: border-color 0.15s;
+        }
+
+        .control-btn:hover {
+            border-color: var(--text-secondary);
         }
 
         .control-btn.secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            color: var(--text-primary);
+            background: transparent;
+            color: var(--text-secondary);
         }
 
         .control-btn.secondary:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
         }
 
 
@@ -169,11 +175,10 @@
 
         .live-indicator {
             display: inline-block;
-            width: 10px;
-            height: 10px;
-            background: var(--accent-red);
+            width: 8px;
+            height: 8px;
+            background: var(--accent-safe);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-red);
             animation: pulse 2s infinite;
         }
 
@@ -191,55 +196,55 @@
             }
         }
 
-        /* CHATBOT STYLES */
+        /* CHATBOT - STEALTH STYLE */
         .chat-fab {
             position: absolute;
             bottom: 30px;
             right: 40px;
-            width: 60px;
-            height: 60px;
-            background: var(--accent-blue);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
-            color: #000;
+            font-size: 18px;
+            color: var(--text-primary);
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
-            transition: all 0.3s ease;
+            transition: border-color 0.15s;
             pointer-events: auto;
             z-index: 1000;
         }
 
         .chat-fab:hover {
-            transform: scale(1.1);
+            border-color: var(--text-secondary);
         }
 
         .chat-window {
             position: absolute;
-            bottom: 100px;
+            bottom: 90px;
             right: 40px;
-            width: 350px;
-            height: 500px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--accent-blue);
-            backdrop-filter: blur(16px);
-            border-radius: 12px;
+            width: 320px;
+            height: 450px;
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
             display: none;
-            /* Hidden by default */
             flex-direction: column;
             pointer-events: auto;
             z-index: 1000;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .chat-header {
-            background: rgba(56, 189, 248, 0.1);
-            padding: 15px;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
-            font-weight: bold;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--card-border);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -247,56 +252,57 @@
 
         .chat-messages {
             flex-grow: 1;
-            padding: 15px;
+            padding: 16px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .msg {
             padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 80%;
-            line-height: 1.4;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            max-width: 85%;
+            line-height: 1.5;
         }
 
         .msg.system {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid var(--accent-blue);
+            background: var(--card-bg);
+            border-left: 2px solid var(--text-secondary);
             color: var(--text-primary);
         }
 
         .msg.user {
             align-self: flex-end;
-            background: rgba(56, 189, 248, 0.2);
-            border-right: 3px solid var(--accent-blue);
-            color: var(--accent-blue);
+            background: var(--card-bg);
+            border-right: 2px solid var(--accent-selection);
+            color: var(--text-primary);
             text-align: right;
         }
 
         .chat-input-area {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-top: 1px solid var(--card-border);
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .chat-input {
             flex-grow: 1;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
             border-radius: 4px;
-            padding: 8px;
-            color: white;
+            padding: 8px 12px;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
         }
 
         .chat-input:focus {
             outline: none;
-            border-color: var(--accent-blue);
+            border-color: var(--text-secondary);
         }
     </style>
 </head>
@@ -408,39 +414,44 @@
                     data: heatData,
                     pickable: true,
                     extruded: true,
-                    radius: 300,  // Thinner hexagons for elegant look
-                    elevationScale: 3,  // Taller bars (elegant height)
-                    elevationRange: [0, 1000],  // Allow taller bars
+                    radius: 300,
+                    elevationScale: 2,
+                    elevationRange: [0, 800],
                     getPosition: d => d.coordinates,
                     getElevationWeight: d => d.weight,
+                    // Stealth monochrome: dark gray to white gradient
                     colorRange: [
-                        [1, 152, 189], [73, 227, 206], [216, 254, 181],
-                        [254, 237, 177], [254, 173, 154], [209, 55, 78]
+                        [39, 39, 42],    // #27272a zinc dark
+                        [63, 63, 70],    // #3f3f46 zinc
+                        [82, 82, 91],    // #52525b zinc mid
+                        [113, 113, 122], // #71717a zinc light
+                        [161, 161, 170], // #a1a1aa gray
+                        [228, 228, 231]  // #e4e4e7 near white
                     ],
                 }),
                 new ScatterplotLayer({
                     id: 'visions-layer',
                     data: visionsData,
                     pickable: true,
-                    opacity: 0.8,
+                    opacity: 0.9,
                     stroked: true,
                     filled: true,
-                    radiusScale: 6,
-                    radiusMinPixels: 5,
+                    radiusScale: 4,
+                    radiusMinPixels: 4,
                     getPosition: d => [d.lon, d.lat],
-                    getFillColor: [255, 0, 0],
-                    getLineColor: [255, 255, 255],
+                    getFillColor: [239, 68, 68],   // #ef4444 matte red
+                    getLineColor: [255, 255, 255], // white stroke
                     getLineWidth: 1,
                 }),
                 new ArcLayer({
                     id: 'escape-routes-layer',
                     data: escapeRoutes,
                     pickable: true,
-                    getWidth: 12,  // Usage: thicker lines for better visibility
+                    getWidth: 2,  // Thin elegant lines
                     getSourcePosition: d => d.source,
                     getTargetPosition: d => d.target,
-                    getSourceColor: [0, 255, 255, 200],
-                    getTargetColor: [168, 85, 247, 200],
+                    getSourceColor: [228, 228, 231, 180], // #e4e4e7 near white
+                    getTargetColor: [113, 113, 122, 180], // #71717a gray
                 })
             ];
 
