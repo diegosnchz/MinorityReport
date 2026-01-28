@@ -352,16 +352,16 @@
             .backgroundColor('#000000') // Pure black for stealth aesthetic
             .nodeRelSize(4) // Smaller, minimal nodes
             .nodeColor(node => {
-                // Stealth palette: mostly grays, white for selection/danger
-                if (node.in_analysis === false) return '#27272a'; // Zinc dark
+                // Data colors: vibrant palette for clarity
+                if (node.in_analysis === false) return '#52525b'; // Zinc for inactive
 
                 const g = node.group ? node.group.toLowerCase() : '';
-                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Matte red
-                if (g === 'yellow' || g === 'location') return '#71717a'; // Medium gray
-                if (g === 'blue' || g === 'citizen') return '#a1a1aa'; // Light gray
-                if (g === 'green' || g === 'safe') return '#10b981'; // Matte emerald
-                if (g === 'purple') return '#e4e4e7'; // Near white for hubs
-                return '#52525b'; // Default zinc
+                if (g === 'red' || g === 'vision' || g.includes('danger')) return '#ef4444'; // Red
+                if (g === 'yellow' || g === 'location') return '#f59e0b'; // Amber
+                if (g === 'blue' || g === 'citizen') return '#3b82f6'; // Blue
+                if (g === 'green' || g === 'safe') return '#10b981'; // Emerald
+                if (g === 'purple') return '#8b5cf6'; // Purple for hubs
+                return '#a1a1aa'; // Default gray
             })
             .nodeLabel(node => `<span style="color: #e4e4e7; background: #121212; padding: 4px 8px; font-family: Inter, sans-serif; font-size: 12px; border: 1px solid #27272a;">${node.label || 'Node'}</span>`)
             .linkWidth(1) // Thin lines
