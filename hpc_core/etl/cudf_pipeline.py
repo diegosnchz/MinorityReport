@@ -1,12 +1,14 @@
 # hpc_core/etl/cudf_pipeline.py
 import pyarrow as pa
 import io
+import logging
 from app.core import hardware_switch as hw
 
 # We wrap RAPIDS imports to avoid crashing if run on a non-GPU dev machine.
 # But for PRODUCTION, this code assumes `cudf` is available.
 # Hardware Switch handles fallback logging.
 cudf = hw.cudf
+logger = logging.getLogger(__name__)
 
 def ingest_arrow_stream_to_gpu(arrow_bytes):
     """
@@ -17,7 +19,9 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
     2. ZERO-COPY LOAD: Read directly into GPU Memory (VRAM) using RAPIDS.
     3. VERIFICATION: Perform GPU-accelerated aggregation.
     """
-    print(f"DEBUG: Receiving {len(arrow_bytes)} bytes of Arrow Stream...")
+    if not arrow_bytes:
+        raise ValueError("Empty Arrow stream payload")
+    logger.info("Receiving %s bytes of Arrow Stream...", len(arrow_bytes))
     
     # 1. Read Arrow Buffer (CPU Side metadata)
     # Even with cuDF, we might need to parse the IPC stream header first tailored to the source.
@@ -29,7 +33,7 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
     
     if hw.HAS_GPU:
         # --- GPU PATH (PRODUCTION) ---
-        print("INFO: Loading directly to GPU via RAPIDS...")
+        logger.info("Loading directly to GPU via RAPIDS...")
         
         # Option A: Direct read if supported by version (cudf.read_ipc is not always standard for streams)
         # Option B: Bridge via PyArrow (Very fast, negligible overhead vs parsing JSON)
@@ -43,7 +47,7 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
         # cudf.DataFrame.from_arrow is zero-copy where possible
         gdf = hw.cudf.DataFrame.from_arrow(pa_table)
         
-        print(f"INFO: Data Loaded to VRAM. Shape: {gdf.shape}")
+        logger.info("Data Loaded to VRAM. Shape: %s", gdf.shape)
         
         # 2. GPU Verification Aggregation
         # Let's group by sector (simulated by rounding lat/lon) to prove we have data
@@ -55,14 +59,13 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
         result = gdf.groupby(['sector_lat', 'sector_lon']).agg({'hash_id': 'count'})
         result.columns = ['sensor_count']
         
-        print("\n--- GPU AGGREGATION RESULT (Sectors) ---")
-        print(result)
+        logger.info("GPU AGGREGATION RESULT (Sectors)\n%s", result)
         
         return gdf
         
     else:
         # --- CPU MOCK PATH (DEV/CI) ---
-        print("INFO: CPU Fallback Mode")
+        logger.info("CPU Fallback Mode")
         import pandas as pd
         reader = pa.ipc.open_stream(source_stream)
         pa_table = reader.read_all()
@@ -72,8 +75,7 @@ def ingest_arrow_stream_to_gpu(arrow_bytes):
         pdf['sector_lon'] = (pdf['lon'] * 10).astype('int32')
         result = pdf.groupby(['sector_lat', 'sector_lon']).agg({'hash_id': 'count'})
         
-        print("\n--- CPU AGGREGATION RESULT (Sectors) ---")
-        print(result)
+        logger.info("CPU AGGREGATION RESULT (Sectors)\n%s", result)
         return pdf
 
 # --- Test Harness (Simulate pipeline) ---

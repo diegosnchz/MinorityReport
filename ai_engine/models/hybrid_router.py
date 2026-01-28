@@ -49,6 +49,14 @@ class HybridRouter(torch.nn.Module):
         self.xgb_model = xgb.train(self.xgb_params, dtrain, num_boost_round=100)
         print(f"XGBoost Trained. Tree Method: {self.xgb_params['tree_method']}")
 
+    def _predict_tabular(self, x_tabular):
+        if self.xgb_model is None:
+            return None
+        if hasattr(self.xgb_model, "inplace_predict"):
+            return self.xgb_model.inplace_predict(x_tabular)
+        dmatrix = xgb.DMatrix(x_tabular)
+        return self.xgb_model.predict(dmatrix)
+
     def forward(self, x, edge_index, x_tabular):
         """
         The Hybrid Forward Pass.
@@ -64,13 +72,11 @@ class HybridRouter(torch.nn.Module):
         # --- Step 1: Query Tabular Brain ---
         # We get the "Base Risk" from XGBoost
         if self.xgb_model:
-            # DMatrix handles both CPU and GPU data efficiently
-            dmatrix = xgb.DMatrix(x_tabular)
-            xgb_risk_score = self.xgb_model.predict(dmatrix) # Returns numpy/cupy array
+            xgb_risk_score = self._predict_tabular(x_tabular)
             
             # Convert to Tensor and Inject into Graph
             # We treat the XGB score as a "Super Feature"
-            xgb_risk_tensor = torch.tensor(xgb_risk_score, dtype=torch.float32, device=x.device).unsqueeze(1)
+            xgb_risk_tensor = torch.as_tensor(xgb_risk_score, dtype=torch.float32, device=x.device).unsqueeze(1)
             
             # Concatenate XGB output to Node Features
             # New shape: [num_nodes, in_channels + 1]

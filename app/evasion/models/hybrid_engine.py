@@ -1,10 +1,11 @@
 import xgboost as xgb
 import shap
 import pandas as pd
-import numpy as np
-from typing import List, Dict, Any
+from typing import Dict, Any, Optional
 import logging
 from app.core import hardware_switch as hw
+
+logger = logging.getLogger(__name__)
 
 class HybridRiskEngine:
     """
@@ -26,27 +27,28 @@ class HybridRiskEngine:
         self.params = hw.get_xgboost_params(base_params)
         
         if hw.HAS_GPU:
-            print("Hybrid Engine: Initializing in GPU Mode (RAPIDS+CUDA)")
+            logger.info("Hybrid Engine: Initializing in GPU Mode (RAPIDS+CUDA)")
         else:
-            print("Hybrid Engine: Initializing in CPU Mode")
+            logger.info("Hybrid Engine: Initializing in CPU Mode")
             
         self.xgb_model = xgb.XGBClassifier(**self.params)
         self.explainer = None
         self.is_trained = False
 
-    def train_preprocessor(self, X: pd.DataFrame, y: pd.Series):
+    def train_preprocessor(self, X: pd.DataFrame, y: pd.Series) -> None:
         """
         Entrena el pre-procesador XGBoost.
         Soporta DataFrames de Pandas o cuDF.
         """
-        # Si tenemos GPU y data es Pandas, intentar pasar a cuDF (Opcional, XGBoost maneja ambos)
-        self.xgb_model.fit(X, y)
+        # Si tenemos GPU, intentamos mover a cuDF cuando sea posible
+        X_train = hw.to_gpu_if_possible(X) if hw.HAS_GPU else X
+        self.xgb_model.fit(X_train, y)
         
         # TreeExplainer funciona mejor en CPU para modelos pequeños, 
         # pero 'gpu_predictor' puede usarse para inferencia
         self.explainer = shap.TreeExplainer(self.xgb_model)
         self.is_trained = True
-        print(f"Hybrid Engine: XGBoost Preprocessor Trained (GPU={hw.HAS_GPU}).")
+        logger.info("Hybrid Engine: XGBoost Preprocessor Trained (GPU=%s).", hw.HAS_GPU)
 
     def get_base_risk(self, node_features: Dict[str, Any]) -> float:
         """
@@ -59,8 +61,8 @@ class HybridRiskEngine:
         # Inferencia rápida
         # Si la entrada es un dict, convertimos a DF
         if hw.HAS_GPU:
-            # Para 1 fila, la sobrecarga de cuDF puede no valer la pena, 
-            # pero mantenemos la coherencia si el pipeline es full GPU.
+            # Para 1 fila, la sobrecarga de cuDF puede no valer la pena,
+            # pero mantenemos coherencia si el pipeline es full GPU.
             df = hw.cudf.DataFrame([node_features])
         else:
             df = pd.DataFrame([node_features])
@@ -69,13 +71,10 @@ class HybridRiskEngine:
         preds = self.xgb_model.predict_proba(df)
         
         # Manejo de salida (numpy vs cupy/cudf)
-        if hw.HAS_GPU:
-             # XGBoost devuelve numpy array incluso con input gpu si no se especifica output
-             return float(preds[:, 1][0])
-        else:
-             return float(preds[:, 1][0])
+           # XGBoost devuelve numpy array incluso con input GPU si no se especifica output
+           return float(preds[:, 1][0])
 
-    def get_feature_importance(self, node_features: pd.DataFrame):
+    def get_feature_importance(self, node_features: pd.DataFrame) -> Optional[Any]:
         """
         Retorna SHAP values para explicar por qué un nodo es riesgoso.
         Vital para el Dashboard de 'Explainability'.

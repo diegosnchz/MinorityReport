@@ -4,15 +4,25 @@ import logging
 # Configure logger
 logger = logging.getLogger("HardwareSwitch")
 
-# Chequear variable de entorno
+logger = logging.getLogger("HardwareSwitch")
+
+# Chequear variables de entorno
 DEMO_MODE = os.getenv("DEMO_MODE", "False").lower() == "true"
+FORCE_MODE = os.getenv("EVASION_MODE", "").strip().lower()
 
 HAS_GPU = False
 cudf = None
 cupy = None
 cuml = None
 
-if not DEMO_MODE:
+def gpu_enabled() -> bool:
+    if FORCE_MODE == "cpu":
+        return False
+    if FORCE_MODE == "gpu":
+        return True
+    return not DEMO_MODE
+
+if gpu_enabled():
     try:
         import cudf
         import cupy
@@ -23,7 +33,7 @@ if not DEMO_MODE:
         logger.warning("⚠️ RAPIDS not found. Falling back to CPU Mode.")
         HAS_GPU = False
 else:
-    logger.info("ℹ️ DEMO MODE Activated. Forcing CPU Execution.")
+    logger.info("ℹ️ CPU Mode Activated. DEMO_MODE=%s EVASION_MODE=%s", DEMO_MODE, FORCE_MODE or "auto")
 
 # Expose libraries (aliases)
 if HAS_GPU:

@@ -4,10 +4,12 @@ import json
 import hashlib
 import random
 import io
+import os
 import pyarrow as pa
 import logging
+from typing import Any
 
-def handler(context, event):
+def handler(context: Any, event: Any) -> Any:
     """
     Nuclio Handler for The Evasion Protocol - Edge Ingest.
     
@@ -17,6 +19,14 @@ def handler(context, event):
     3. PERFORMANCE: Serialize to Apache Arrow (IPC Stream) for Zero-Copy transfer.
     """
     
+    # 0. Auth (Edge Token)
+    headers = getattr(event, "headers", {}) or {}
+    expected_token = os.environ.get("EDGE_TOKEN", "")
+    provided_token = headers.get("x-edge-token", "")
+    if expected_token and provided_token != expected_token:
+        context.logger.warning("Unauthorized edge ingest attempt")
+        return context.Response(body="Unauthorized", status_code=401)
+
     # 1. Parse Input
     try:
         body = event.body
@@ -36,13 +46,22 @@ def handler(context, event):
     # Geospatial Jitter (~50m randomization)
     # 0.0005 degrees is roughly 55 meters at 40 deg latitude
     # This prevents precise triangulation of "Safe Nodes"
-    raw_lat = float(body.get('lat', 0.0))
-    raw_lon = float(body.get('lon', 0.0))
+    try:
+        raw_lat = float(body["lat"])
+        raw_lon = float(body["lon"])
+        if not (-90.0 <= raw_lat <= 90.0 and -180.0 <= raw_lon <= 180.0):
+            raise ValueError("lat/lon out of range")
+    except Exception as e:
+        context.logger.error(f"Invalid coordinates: {e}")
+        return context.Response(body="Invalid coordinates", status_code=400)
     
     jitter_lat = raw_lat + random.uniform(-0.0005, 0.0005)
     jitter_lon = raw_lon + random.uniform(-0.0005, 0.0005)
     
-    timestamp = float(body.get('timestamp', 0.0))
+    try:
+        timestamp = float(body.get('timestamp', 0.0))
+    except Exception:
+        return context.Response(body="Invalid timestamp", status_code=400)
     
     # 3. Arrow Serialization (Zero-Copy Pipeline)
     # Define rigid schema for the High Performance Core

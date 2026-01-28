@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 import torch
 import logging
+import os
 
 # Import Project Modules
 from src.ai.graph_loader import load_graph_from_neo4j
@@ -17,12 +18,19 @@ logger = logging.getLogger("api")
 app = FastAPI(title="The Evasion Protocol API", version="1.0")
 
 # CORS (Allow Frontend to connect)
+def _parse_origins(value: str) -> list[str]:
+    if not value:
+        return ["http://localhost:8000", "http://localhost:3000"]
+    return [o.strip() for o in value.split(",") if o.strip()]
+
+allowed_origins = _parse_origins(os.getenv("ALLOWED_ORIGINS", ""))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Global Model Store (In a real app, use a lifespan manager)
@@ -47,40 +55,36 @@ async def startup_event():
 def health_check():
     return {"status": "online", "system": "The Hive"}
 
+def _serialize_nodes(data) -> list[dict]:
+    return [
+        {
+            "id": data.node_map[i],
+            "label": f"Node-{i}",
+            "x": float(data.x[i][0]),
+            "y": float(data.x[i][1]),
+            "is_hideout": bool(data.x[i][2])
+        }
+        for i in range(data.num_nodes)
+    ]
+
+def _serialize_edges(data) -> list[dict]:
+    rows, cols = data.edge_index
+    risks = data.edge_attr[:, 0].tolist()  # Risk is index 0
+    return [
+        {
+            "from": data.node_map[int(rows[i])],
+            "to": data.node_map[int(cols[i])],
+            "risk": risks[i]
+        }
+        for i in range(len(rows))
+    ]
+
 @app.get("/graph")
 def get_graph_topology():
     """Returns the current raw graph from Neo4j for visualization."""
     try:
-        # We start fresh to get pure Neo4j data
         data = load_graph_from_neo4j()
-        
-        # Convert to serializable format (Node Link Data)
-        nodes = []
-        for i in range(data.num_nodes):
-            uid = data.node_map[i]
-            features = data.x[i].tolist()
-            nodes.append({
-                "id": uid,
-                "label": f"Node-{i}",
-                "x": features[0],
-                "y": features[1],
-                "is_hideout": bool(features[2])
-            })
-            
-        edges = []
-        rows, cols = data.edge_index
-        risks = data.edge_attr[:, 0].tolist() # Risk is index 0
-        
-        for i in range(len(rows)):
-            source_idx = int(rows[i])
-            target_idx = int(cols[i])
-            edges.append({
-                "from": data.node_map[source_idx],
-                "to": data.node_map[target_idx],
-                "risk": risks[i]
-            })
-            
-        return {"nodes": nodes, "edges": edges}
+        return {"nodes": _serialize_nodes(data), "edges": _serialize_edges(data)}
     except Exception as e:
         logger.error(f"Error fetching graph: {e}")
         raise HTTPException(status_code=500, detail=str(e))

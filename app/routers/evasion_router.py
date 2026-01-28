@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from app.evasion.services.routing_service import routing_service
 from app.evasion.models.hybrid_engine import hybrid_engine
 import pandas as pd
-import numpy as np
 
 router = APIRouter(prefix="/evasion", tags=["Evasion Protocol"])
 
@@ -29,15 +28,13 @@ async def explain_node_risk(hour: int, weather: str, patrols: float):
     }])
     
     if not hybrid_engine.is_trained:
-        # Train with some dummy data if not trained
-        X = pd.DataFrame(np.random.rand(10, 3), columns=["hour", "patrol_density", "weather_score"])
-        y = pd.Series([0,1,0,1,0,0,1,0,1,0])
-        hybrid_engine.train_preprocessor(X, y)
+        raise HTTPException(status_code=503, detail="Hybrid engine not ready")
 
     shap_values = hybrid_engine.get_feature_importance(features)
     
     return {
         "base_risk": hybrid_engine.get_base_risk(features.iloc[0].to_dict()),
         "top_factors": ["Patrols", "Weather"] if weather == "Rain" else ["Hour"],
-        "shap_summary": "Inferencia acelerada por GPU."
+        "shap_summary": "Inferencia acelerada por GPU.",
+        "shap_values": shap_values.tolist() if hasattr(shap_values, "tolist") else shap_values
     }
