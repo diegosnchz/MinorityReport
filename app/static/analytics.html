@@ -166,21 +166,21 @@
       letter-spacing: 0.5px;
     }
 
-    /* Utilities - Matte colors */
+    /* Data Utilities - Functional Colors for Clarity */
     .text-red {
-      color: var(--accent-danger);
+      color: #ef4444;
     }
 
     .text-blue {
-      color: var(--text-primary);
+      color: #3b82f6;
     }
 
     .text-green {
-      color: var(--accent-safe);
+      color: #10b981;
     }
 
     .text-amber {
-      color: #a1a1aa;
+      color: #f59e0b;
     }
 
     /* Spinner */
@@ -373,8 +373,8 @@
                 const found = temporal.find(t => t.hour === i);
                 return found ? found.count : 0;
               }),
-              borderColor: '#71717a',
-              backgroundColor: 'rgba(113, 113, 122, 0.1)',
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.15)',
               fill: true,
               tension: 0.4,
               pointRadius: 0,
@@ -396,7 +396,7 @@
             labels: spatial.by_type.slice(0, 5).map(d => d.type),
             datasets: [{
               data: spatial.by_type.slice(0, 5).map(d => d.count),
-              backgroundColor: ['#e4e4e7', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'],
+              backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6'],
               borderWidth: 0
             }]
           },
