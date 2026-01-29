@@ -44,7 +44,7 @@ graph TD
 
 ---
 
-## 🚀 Módulos del Sistema
+##  Módulos del Sistema
 
 ### 1. Ingesta Zero-Copy & Privacidad (Nuclio + Arrow)
 - **Localización:** `edge_serverless/`
@@ -66,7 +66,7 @@ graph TD
 
 ---
 
-## 📊 Performance Benchmarks: Legacy vs. HPC
+##  Performance Benchmarks: Legacy vs. HPC
 
 El sistema está optimizado para procesar **millones de eventos** con latencia sub-milisegundo.
 
@@ -79,7 +79,7 @@ El sistema está optimizado para procesar **millones de eventos** con latencia s
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 - **GPU Acceleration**: RAPIDS (cuDF), XGBoost, PyTorch Geometric.
 - **Compute**: Numba, Apache Arrow, Xarray.
 - **Persistence**: Neo4j, Parquet, Zarr.
@@ -88,7 +88,7 @@ El sistema está optimizado para procesar **millones de eventos** con latencia s
 
 ---
 
-## 🚦 Cómo empezar
+##  Cómo empezar
 
 1. **Infraestructura**: Levanta Neo4j con `docker-compose up`.
 2. **Simulación**: Ejecuta `python tests/test_api_output.py` para verificar el flujo de datos.
