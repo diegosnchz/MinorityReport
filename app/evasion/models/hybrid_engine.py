@@ -1,5 +1,8 @@
 import xgboost as xgb
-import shap
+try:
+    import shap
+except Exception:  # pragma: no cover - optional dependency
+    shap = None
 import pandas as pd
 from typing import Dict, Any, Optional
 import logging
@@ -46,7 +49,11 @@ class HybridRiskEngine:
         
         # TreeExplainer funciona mejor en CPU para modelos pequeños, 
         # pero 'gpu_predictor' puede usarse para inferencia
-        self.explainer = shap.TreeExplainer(self.xgb_model)
+        if shap is not None:
+            self.explainer = shap.TreeExplainer(self.xgb_model)
+        else:
+            self.explainer = None
+            logger.warning("SHAP not available. Explainability disabled.")
         self.is_trained = True
         logger.info("Hybrid Engine: XGBoost Preprocessor Trained (GPU=%s).", hw.HAS_GPU)
 
@@ -71,8 +78,8 @@ class HybridRiskEngine:
         preds = self.xgb_model.predict_proba(df)
         
         # Manejo de salida (numpy vs cupy/cudf)
-           # XGBoost devuelve numpy array incluso con input GPU si no se especifica output
-           return float(preds[:, 1][0])
+        # XGBoost devuelve numpy array incluso con input GPU si no se especifica output
+        return float(preds[:, 1][0])
 
     def get_feature_importance(self, node_features: pd.DataFrame) -> Optional[Any]:
         """
@@ -82,6 +89,8 @@ class HybridRiskEngine:
         if not self.is_trained:
             return None
             
+        if self.explainer is None:
+            return None
         shap_values = self.explainer.shap_values(node_features)
         return shap_values
 

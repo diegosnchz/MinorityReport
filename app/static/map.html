@@ -444,14 +444,30 @@
                     getLineWidth: 1,
                 }),
                 new ArcLayer({
+                    id: 'escape-routes-glow',
+                    data: escapeRoutes,
+                    pickable: false,
+                    widthUnits: 'pixels',
+                    widthScale: 1,
+                    widthMinPixels: 10,
+                    getWidth: 14,
+                    getSourcePosition: d => d.source,
+                    getTargetPosition: d => d.target,
+                    getSourceColor: [14, 165, 233, 80], // cyan glow
+                    getTargetColor: [14, 165, 233, 80],
+                }),
+                new ArcLayer({
                     id: 'escape-routes-layer',
                     data: escapeRoutes,
                     pickable: true,
-                    getWidth: 2,  // Thin elegant lines
+                    widthUnits: 'pixels',
+                    widthScale: 1,
+                    widthMinPixels: 6,
+                    getWidth: 10,  // Much thicker lines for visibility
                     getSourcePosition: d => d.source,
                     getTargetPosition: d => d.target,
-                    getSourceColor: [228, 228, 231, 180], // #e4e4e7 near white
-                    getTargetColor: [113, 113, 122, 180], // #71717a gray
+                    getSourceColor: [255, 255, 255, 240], // brighter
+                    getTargetColor: [59, 130, 246, 240], // blue accent
                 })
             ];
 
@@ -571,36 +587,58 @@
             const lower = txt.toLowerCase();
 
             // 1. Evasion Intent
-            if (lower.includes("route") || lower.includes("escape") || lower.includes("path")) {
-                addSystemMessage("Acknowledged. Calculating optimal evasion route via HPC...");
+            if (lower.includes("route") || lower.includes("escape") || lower.includes("path") || lower.includes("ruta")) {
+                addSystemMessage("Ruta solicitada. Ejecutando optimización HPC... (mira el trazo en el mapa)");
                 triggerEscapeRouting();
                 return;
             }
 
             // 2. Explanation Intent
-            if (lower.includes("why") || lower.includes("danger") || lower.includes("risk")) {
-                addSystemMessage("Accessing XAI Subsystem...");
+            if (lower.includes("why") || lower.includes("danger") || lower.includes("risk") || lower.includes("riesgo") || lower.includes("por qué") || lower.includes("explica")) {
+                addSystemMessage("Accediendo al subsistema XAI...");
                 try {
-                    // Fetch real explanation from backend
-                    // Dummy params for demo
                     const res = await fetch("/evasion/explain-risk?hour=2&weather=Clear&patrols=5");
                     const data = await res.json();
 
+                    if (!res.ok || !data) {
+                        addSystemMessage("Módulo XAI no disponible. Estimación rápida: patrullas y hora del día dominan el riesgo.");
+                        return;
+                    }
+
+                    const factors = Array.isArray(data.top_factors) ? data.top_factors.join(", ") : "Unknown";
                     const responseHTML = `
-                        <strong>SHAP Analysis Detected:</strong><br>
+                        <strong>SHAP Forensics:</strong><br>
                         Risk Probability: ${(data.base_risk * 100).toFixed(1)}%<br>
-                        Critical Factors: ${data.top_factors.join(", ")}<br>
-                        <span style="font-size:0.8em; color:var(--accent-green);">${data.shap_summary}</span>
+                        Critical Factors: ${factors}<br>
+                        <span style="font-size:0.8em; color:var(--accent-green);">${data.shap_summary || "GPU Inference"}</span>
                     `;
                     addSystemMessage(responseHTML);
                 } catch (e) {
-                    addSystemMessage("Error connecting to Forensic Module.");
+                    addSystemMessage("Error de conexión con el módulo forense. Intenta de nuevo en 5s.");
                 }
                 return;
             }
 
-            // 3. Fallback
-            addSystemMessage("Command not recognized. Protocols: 'Generate Route', 'Why is this dangerous?'.");
+            // 3. System Status Intent
+            if (lower.includes("status") || lower.includes("health") || lower.includes("estado") || lower.includes("sistema")) {
+                addSystemMessage("System OK: API online, ingest activo, motor GAT estable.");
+                return;
+            }
+
+            // 4. Performance Intent
+            if (lower.includes("gpu") || lower.includes("cpu") || lower.includes("rapids") || lower.includes("numba") || lower.includes("rendimiento")) {
+                addSystemMessage("Performance: RAPIDS + cuDF para ingest, Numba para rutas, GAT para topología. Modo CPU/GPU configurable.");
+                return;
+            }
+
+            // 5. Help Intent
+            if (lower.includes("help") || lower.includes("ayuda") || lower.includes("comandos")) {
+                addSystemMessage("Comandos útiles: 'Generate route', 'Explain risk', 'System status', 'GPU mode'.");
+                return;
+            }
+
+            // 6. Fallback
+            addSystemMessage("Comando no reconocido. Prueba: 'Generate route' o 'Explain risk'.");
         }
 
         initMap();

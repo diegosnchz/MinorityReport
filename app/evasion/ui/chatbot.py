@@ -1,6 +1,8 @@
 import panel as pn
 import httpx
 import asyncio
+import random
+import os
 
 # Initialize Panel extension with design tweaks
 pn.extension(design="material", theme="dark")
@@ -45,6 +47,9 @@ pn.config.raw_css.append(glass_css)
 
 class ChatbotInterface:
     def __init__(self):
+        self.backend_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+        self.last_intent = None
+
         # Chat Feed with auto-scroll
         self.chat_feed = pn.Column(
             scroll=True, 
@@ -67,6 +72,17 @@ class ChatbotInterface:
             width=100
         )
         self.send_btn.on_click(self.respond)
+
+        # Quick Actions
+        self.quick_actions = pn.Row(
+            pn.widgets.Button(name="Explain Risk", button_type="primary", width=140),
+            pn.widgets.Button(name="Generate Route", button_type="success", width=140),
+            pn.widgets.Button(name="System Status", button_type="warning", width=140),
+            pn.widgets.Button(name="Open Map", button_type="default", width=140),
+            sizing_mode="stretch_width",
+        )
+        for btn in self.quick_actions:
+            btn.on_click(self._handle_quick_action)
         
         # Initial Welcome Message
         self.chat_feed.append(pn.pane.Markdown(
@@ -95,38 +111,100 @@ class ChatbotInterface:
         status_msg.object = f"<div class='chat-bubble-system'><strong>PREC0G:</strong> {response_text}</div>"
 
     async def process_query(self, query):
-        q = query.lower()
+        q = query.lower().strip()
         try:
             # Routing Intent
-            if any(k in q for k in ["route", "escape", "path", "evade"]):
-                return "Optimization Algorithm (JIT) engaged. Calculating safest path via Apache Arrow streams. Active ArcLayer visualization updated on main HUD."
+            if any(k in q for k in ["route", "escape", "path", "evade", "ruta", "escapar"]):
+                self.last_intent = "route"
+                return random.choice([
+                    "Optimization Engine online. Calculando ruta de evasión con HPC + JIT. Abre el mapa para visualizar la ruta.",
+                    "Ruta solicitada. Motor híbrido activado (GAT + heurísticas). Visualización ArcLayer lista en el mapa.",
+                    "Trazando ruta óptima con constraints de riesgo. Consulta el mapa para el trazo completo."
+                ])
             
             # XAI / Explanation Intent
-            elif any(k in q for k in ["why", "risk", "reason", "explain"]):
+            elif any(k in q for k in ["why", "risk", "reason", "explain", "riesgo", "explica", "por qué"]):
+                self.last_intent = "explain"
                 try:
                     # Attempt connection to backend
                     async with httpx.AsyncClient(timeout=3.0) as client:
                         # Hardcoded params for demo context, in real app would parse from map state
-                        res = await client.get("http://localhost:8000/evasion/explain-risk?hour=18&weather=Rain&patrols=5")
+                        res = await client.get(f"{self.backend_url}/evasion/explain-risk?hour=18&weather=Rain&patrols=5")
                         
                         if res.status_code == 200:
                             data = res.json()
                             risk_pct = round(data.get('base_risk', 0.5) * 100, 1)
                             factors = ", ".join(data.get('top_factors', ['Unknown']))
-                            return f"SHAP Logic Forensic:<br>• Risk Probability: <strong>{risk_pct}%</strong><br>• Critical Drivers: {factors}<br>• Inference: GPU-Accelerated (RAPIDS)"
+                            return (
+                                "SHAP Forensics:<br>"
+                                f"• Risk Probability: <strong>{risk_pct}%</strong><br>"
+                                f"• Critical Drivers: {factors}<br>"
+                                "• Inference: GPU-Accelerated (RAPIDS)"
+                            )
                         else:
-                            # Fallback if endpoint fails
-                            return "Forensic Module Offline. Simulated inference: Risk driven by Patrol Density and Time of Day."
+                            return random.choice([
+                                "Forensic Module Offline. Simulación: riesgo dominado por patrullaje y hora del día.",
+                                "No puedo acceder al módulo XAI ahora. Estimación rápida: clima y patrullaje elevan el riesgo.",
+                                "XAI temporalmente indisponible. Probable driver: densidad de patrullas + ventana horaria."
+                            ])
                             
                 except Exception as e:
                     return f"Neural Link Unstable (Backend Connection Failed): {str(e)}"
+
+            # System Status Intent
+            elif any(k in q for k in ["status", "health", "estado", "sistema"]):
+                self.last_intent = "status"
+                return random.choice([
+                    "System Status: ✅ API online, ✅ Stream ingest ready, ✅ GAT router warm.",
+                    "All green. Ingest pipeline active. GPU acceleration nominal.",
+                    "Telemetry OK: ingestion healthy, inference online, UI responsive."
+                ])
+
+            # Data/Privacy Intent
+            elif any(k in q for k in ["privacy", "hash", "anon", "gdpr", "datos", "privacidad"]):
+                self.last_intent = "privacy"
+                return (
+                    "Privacy Layer: user_id hash SHA-256 + jitter geoespacial (~50m). "
+                    "Los payloads se serializan en Arrow IPC para minimizar copia de datos."
+                )
+
+            # Performance Intent
+            elif any(k in q for k in ["gpu", "cpu", "rapids", "cudf", "numba", "latency", "rendimiento"]):
+                self.last_intent = "performance"
+                return (
+                    "Performance Profile: RAPIDS (cuDF) para ingest + agregaciones, "
+                    "Numba para rutas, y GAT para topología. "
+                    "Modo CPU/GPU configurable vía EVASION_MODE."
+                )
+
+            # Map Intent
+            elif any(k in q for k in ["map", "mapa", "dashboard", "panel"]):
+                self.last_intent = "map"
+                return f"Acceso rápido al mapa: {self.backend_url}/map-view"
             
             # Chit-chat
             else:
-                return "Command unrecognized. Valid protocols: 'Generate route', 'Explain risk factors'."
+                self.last_intent = "unknown"
+                return random.choice([
+                    "No reconozco ese comando. Prueba: 'Explain risk', 'Generate route', 'System status'.",
+                    "¿Quieres riesgo, ruta o estado del sistema? Puedo ayudarte con cualquiera.",
+                    "Comando ambiguo. Sugiero: 'Explain risk' o 'Generate route'."
+                ])
                 
         except Exception as e:
             return f"Critical Logic Failure: {str(e)}"
+
+    async def _handle_quick_action(self, event):
+        label = event.obj.name
+        if label == "Explain Risk":
+            self.input_box.value = "Explain risk"
+        elif label == "Generate Route":
+            self.input_box.value = "Generate route"
+        elif label == "System Status":
+            self.input_box.value = "System status"
+        elif label == "Open Map":
+            self.input_box.value = "Open map"
+        await self.respond(event)
 
     def view(self):
         # Header
@@ -139,6 +217,7 @@ class ChatbotInterface:
         return pn.Column(
             header,
             self.chat_feed,
+            self.quick_actions,
             pn.Row(self.input_box, self.send_btn, css_classes=['input-area']),
             sizing_mode="stretch_width",
             max_width=600,

@@ -3,6 +3,7 @@ import bokeh.plotting as bp
 from bokeh.models import HoverTool, ColumnDataSource
 import pandas as pd
 import numpy as np
+import os
 
 # Inicializar extensión
 pn.extension('bokeh')
@@ -10,6 +11,7 @@ pn.extension('bokeh')
 class DashboardManager:
     def __init__(self):
         self.title = "The Evasion Protocol | Hybrid Analytics"
+        self.map_url = os.getenv("MAP_URL", "http://localhost:8000/map-view")
 
     def get_kpis(self):
         """Genera KPIs estáticos principales"""
@@ -63,10 +65,14 @@ class DashboardManager:
 
     def view(self):
         """Retorna la vista completa del Dashboard"""
+        back_to_map = pn.widgets.Button(name="↩ Volver al mapa", button_type="primary")
+        back_to_map.js_on_click(code=f"window.location.href = '{self.map_url}';")
+
         template = pn.template.FastListTemplate(
             title=self.title,
             sidebar=[
                 pn.pane.Markdown("## Controls"),
+                back_to_map,
                 pn.widgets.Select(name="Sector", options=['Sector 4', 'Usera', 'Castellana']),
                 pn.widgets.Button(name="Run Optimization", button_type="primary")
             ],
