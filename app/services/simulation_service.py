@@ -16,6 +16,9 @@ class SimulationService:
         """Ejecuta un 'tick' de la simulación."""
         print("Simulando actividad en la ciudad...")
         
+        # Clear old visions before generating new ones to avoid accumulation
+        await self._clear_old_visions()
+        
         if hw.DEMO_MODE:
             # En demo mode, no tocamos la BD.
             # Podríamos modificar un estado en memoria si quisiéramos,
@@ -68,5 +71,12 @@ class SimulationService:
         
         prob = (base_risk * 0.6) + (env_risk * 0.4) + noise
         return min(max(prob, 0.0), 0.99)
+
+    async def _clear_old_visions(self):
+        """Clear all existing open visions to avoid accumulation."""
+        from app.core.database import db_manager
+        query = "MATCH (v:Vision) DETACH DELETE v"
+        await db_manager.query(query)
+        print("Cleared old visions.")
 
 simulation_service = SimulationService()

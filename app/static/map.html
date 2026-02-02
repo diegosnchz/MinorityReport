@@ -419,6 +419,12 @@
                     elevationRange: [0, 800],
                     getPosition: d => d.coordinates,
                     getElevationWeight: d => d.weight,
+                    getColorWeight: d => d.weight,
+                    // Force re-render on data update
+                    updateTriggers: {
+                        getElevationWeight: Date.now(),
+                        getColorWeight: Date.now()
+                    },
                     // Data colors: green-to-red heat scale for clarity
                     colorRange: [
                         [16, 185, 129],  // #10b981 emerald (low risk)

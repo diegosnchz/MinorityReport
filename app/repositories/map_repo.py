@@ -8,30 +8,36 @@ class MapRepository:
         """
         Devuelve ubicaciones de crímenes recientes para el Heatmap (HexagonLayer).
         Retorna [ {pos: [lon, lat], weight: float}, ... ]
+        Data is regenerated stochastically on each call.
         """
         if hw.DEMO_MODE:
             # Generate synthetic heatmap data spread across Madrid
+            # Randomized on each call for dynamic visualization
             data = []
-            # Create hotspots across different areas of Madrid
+            # Create hotspots across different areas of Madrid with random weights
             hotspots = [
-                {"lat": 40.4168, "lon": -3.7038, "base_weight": 0.8},  # Puerta del Sol
-                {"lat": 40.4073, "lon": -3.6937, "base_weight": 0.7},  # Atocha
-                {"lat": 40.4200, "lon": -3.7050, "base_weight": 0.6},  # Gran Via
-                {"lat": 40.4150, "lon": -3.6840, "base_weight": 0.5},  # Retiro
-                {"lat": 40.4300, "lon": -3.7100, "base_weight": 0.65}, # Tetuan
-                {"lat": 40.4500, "lon": -3.6900, "base_weight": 0.5},  # Chamartin (north)
-                {"lat": 40.3900, "lon": -3.7000, "base_weight": 0.55}, # Usera (south)
-                {"lat": 40.4100, "lon": -3.7400, "base_weight": 0.45}, # Casa de Campo (west)
-                {"lat": 40.4250, "lon": -3.6600, "base_weight": 0.4},  # Salamanca (east)
-                {"lat": 40.4400, "lon": -3.7200, "base_weight": 0.5},  # Cuatro Caminos
+                {"lat": 40.4168, "lon": -3.7038, "name": "Sol"},
+                {"lat": 40.4073, "lon": -3.6937, "name": "Atocha"},
+                {"lat": 40.4200, "lon": -3.7050, "name": "Gran Via"},
+                {"lat": 40.4150, "lon": -3.6840, "name": "Retiro"},
+                {"lat": 40.4300, "lon": -3.7100, "name": "Tetuan"},
+                {"lat": 40.4500, "lon": -3.6900, "name": "Chamartin"},
+                {"lat": 40.3900, "lon": -3.7000, "name": "Usera"},
+                {"lat": 40.4100, "lon": -3.7400, "name": "Casa de Campo"},
+                {"lat": 40.4250, "lon": -3.6600, "name": "Salamanca"},
+                {"lat": 40.4400, "lon": -3.7200, "name": "Cuatro Caminos"},
             ]
             
             for hotspot in hotspots:
-                # Create cluster of points around each hotspot - wider spread
-                for _ in range(8):  # Fewer points per hotspot
-                    lat_offset = np.random.normal(0, 0.015)  # Much wider spread
-                    lon_offset = np.random.normal(0, 0.015)
-                    weight = hotspot["base_weight"] + np.random.uniform(-0.2, 0.2)
+                # Random base weight for each hotspot (changes each call)
+                base_weight = np.random.uniform(0.3, 0.9)
+                # Random number of points per hotspot (5-12)
+                num_points = np.random.randint(5, 13)
+                
+                for _ in range(num_points):
+                    lat_offset = np.random.normal(0, 0.012)
+                    lon_offset = np.random.normal(0, 0.012)
+                    weight = base_weight + np.random.uniform(-0.25, 0.25)
                     data.append({
                         "coordinates": [
                             hotspot["lon"] + lon_offset,
@@ -53,16 +59,27 @@ class MapRepository:
         
         RETURN l.coord.longitude as lon, 
                l.coord.latitude as lat, 
-               (l.env_risk + (past_crimes * 0.1)) as weight
+               l.env_risk as base_risk,
+               past_crimes
         """
         results = await db_manager.query(query)
         
-        # Formato Deck.gl
+        # Formato Deck.gl - ADD RANDOMNESS so bars change on each call
         data = []
         for row in results:
+            # Base weight from database + random variation
+            base_weight = row.get('base_risk', 0.3) + (row.get('past_crimes', 0) * 0.1)
+            # Add stochastic variation (-0.3 to +0.3)
+            random_variation = np.random.uniform(-0.3, 0.3)
+            final_weight = max(0.1, min(1.0, base_weight + random_variation))
+            
+            # Add random coordinate offset so bars MOVE to new positions
+            lat_offset = np.random.uniform(-0.02, 0.02)
+            lon_offset = np.random.uniform(-0.02, 0.02)
+            
             data.append({
-                "coordinates": [row['lon'], row['lat']],
-                "weight": row['weight']
+                "coordinates": [row['lon'] + lon_offset, row['lat'] + lat_offset],
+                "weight": final_weight
             })
         return data
 

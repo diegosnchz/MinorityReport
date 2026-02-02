@@ -52,6 +52,19 @@ class PreCrimeCityGenerator:
         logger.info(f"buildings Construyendo {NUM_LOCATIONS} ubicaciones...")
         loc_types = ["Bank", "Jewelry Store", "Subway Station", "Dark Alley", "Park", "Cafe", "Apartment Block"]
         
+        # Real Madrid neighborhoods and landmarks
+        madrid_places = [
+            "Sol", "Gran Via", "Malasana", "Chueca", "Lavapies", "Retiro", "Salamanca",
+            "Chamberi", "La Latina", "Usera", "Vallecas", "Atocha", "Moncloa", "Arguelles",
+            "Tetuan", "Chamartin", "Hortaleza", "Fuencarral", "Embajadores", "Austrias",
+            "Opera", "Tribunal", "Alonso Martinez", "Bilbao", "Noviciado", "Callao",
+            "Plaza Mayor", "Puerta del Sol", "Paseo del Prado", "Bernabeu", "Plaza Castilla",
+            "Ventas", "Goya", "Velazquez", "Serrano", "Principe Pio", "Cuatro Caminos",
+            "Nuevos Ministerios", "Gregorio Maranon", "Alvarado", "Estrecho", "Rios Rosas",
+            "Canal", "Quevedo", "San Bernardo", "Santo Domingo", "Norte", "Piramides",
+            "Marques de Vadillo", "Oporto", "Vista Alegre"
+        ]
+        
         locations = []
         for i in range(NUM_LOCATIONS):
             l_type = random.choice(loc_types)
@@ -63,10 +76,13 @@ class PreCrimeCityGenerator:
             # Lon: -3.75 to -3.55
             lat = 40.35 + (random.random() * (40.50 - 40.35))
             lon = -3.75 + (random.random() * (-3.55 - -3.75))
+            
+            # Use real Madrid place name
+            place_name = madrid_places[i % len(madrid_places)]
 
             locations.append({
                 "id": f"LOC_{i}",
-                "name": f"{fake.street_name()} {l_type}",
+                "name": f"{place_name} {l_type}",
                 "type": l_type,
                 "env_risk": env_risk,
                 "coord_x": lat, 

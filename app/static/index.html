@@ -350,7 +350,7 @@
         const graphElem = document.getElementById('graph-container');
         let Graph = ForceGraph3D()(graphElem)
             .backgroundColor('#000000') // Pure black for stealth aesthetic
-            .nodeRelSize(4) // Smaller, minimal nodes
+            .nodeRelSize(8) // Larger nodes for better visibility
             .nodeColor(node => {
                 // Data colors: vibrant palette for clarity
                 if (node.in_analysis === false) return '#52525b'; // Zinc for inactive
@@ -364,9 +364,9 @@
                 return '#a1a1aa'; // Default gray
             })
             .nodeLabel(node => `<span style="color: #e4e4e7; background: #121212; padding: 4px 8px; font-family: Inter, sans-serif; font-size: 12px; border: 1px solid #27272a;">${node.label || 'Node'}</span>`)
-            .linkWidth(1) // Thin lines
-            .linkColor(() => '#27272a') // Very faint gray links
-            .linkOpacity(0.4) // Subtle connections
+            .linkWidth(1.5) // Balanced line width
+            .linkColor(() => '#52525b') // Visible but not overpowering gray
+            .linkOpacity(0.5) // Balanced opacity
             .onNodeClick(node => {
                 const distance = 40;
                 const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
@@ -378,8 +378,8 @@
             });
 
         // Configure forces AFTER Graph is created (proper way to set d3 forces)
-        Graph.d3Force('link').distance(100);  // Longer links for spread
-        Graph.d3Force('charge').strength(-200);  // Repulsion between nodes
+        Graph.d3Force('link').distance(40);  // Shorter links for denser graph
+        Graph.d3Force('charge').strength(-80);  // Less repulsion for tighter clustering
 
         async function fetchGraphData() {
             try {
