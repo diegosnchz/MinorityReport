@@ -1,0 +1,367 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Vercel Design System - Geist */
+  --geist-foreground: #000000;
+  --geist-background: #ffffff;
+  --geist-accent: #0070f3;
+  --geist-success: #0070f3;
+  --geist-error: #e00;
+  --geist-warning: #f5a623;
+  --geist-gray-100: #fafafa;
+  --geist-gray-200: #eaeaea;
+  --geist-gray-300: #999999;
+  --geist-gray-400: #666666;
+  --geist-gray-500: #444444;
+  --geist-gray-600: #333333;
+  --geist-radius: 6px;
+  --geist-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --geist-shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.08);
+  --geist-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  
+  color-scheme: light;
+  color: var(--geist-foreground);
+  background-color: var(--geist-background);
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--geist-background);
+  color: var(--geist-foreground);
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Typography - Vercel Style */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--geist-foreground);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  color: var(--geist-gray-400);
+  line-height: 1.6;
+}
+
+/* Custom scrollbar - minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--geist-gray-200);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--geist-gray-300);
+}
+
+/* Selection - Vercel blue */
+::selection {
+  background: rgba(0, 112, 243, 0.15);
+  color: var(--geist-foreground);
+}
+
+/* Utility classes - Vercel Design System */
+.geist-card {
+  background: var(--geist-background);
+  border: 1px solid var(--geist-gray-200);
+  border-radius: var(--geist-radius);
+  box-shadow: var(--geist-shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.geist-card:hover {
+  box-shadow: var(--geist-shadow-md);
+  border-color: var(--geist-gray-300);
+}
+
+.geist-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--geist-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.geist-button-primary {
+  background: var(--geist-foreground);
+  color: var(--geist-background);
+  border-color: var(--geist-foreground);
+}
+
+.geist-button-primary:hover {
+  background: var(--geist-gray-600);
+  border-color: var(--geist-gray-600);
+}
+
+.geist-button-secondary {
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  border-color: var(--geist-gray-200);
+}
+
+.geist-button-secondary:hover {
+  border-color: var(--geist-foreground);
+}
+
+.geist-button-ghost {
+  background: transparent;
+  color: var(--geist-gray-400);
+  border-color: transparent;
+}
+
+.geist-button-ghost:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-gray-100);
+}
+
+.geist-link {
+  color: var(--geist-accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.geist-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.geist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: var(--geist-gray-100);
+  color: var(--geist-gray-500);
+  border: 1px solid var(--geist-gray-200);
+}
+
+.geist-badge-success {
+  background: rgba(0, 112, 243, 0.1);
+  color: var(--geist-accent);
+  border-color: rgba(0, 112, 243, 0.2);
+}
+
+.geist-badge-error {
+  background: rgba(224, 0, 0, 0.1);
+  color: var(--geist-error);
+  border-color: rgba(224, 0, 0, 0.2);
+}
+
+.geist-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--geist-gray-200);
+  border-radius: var(--geist-radius);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.geist-input:focus {
+  outline: none;
+  border-color: var(--geist-accent);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+}
+
+.geist-input::placeholder {
+  color: var(--geist-gray-300);
+}
+
+/* Table styles */
+.geist-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.geist-table th {
+  text-align: left;
+  padding: 12px;
+  font-weight: 500;
+  color: var(--geist-gray-400);
+  border-bottom: 1px solid var(--geist-gray-200);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.geist-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--geist-gray-200);
+  color: var(--geist-foreground);
+}
+
+.geist-table tr:hover td {
+  background: var(--geist-gray-100);
+}
+
+.geist-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Layout utilities */
+.container-vercel {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .container-vercel {
+    padding: 0 16px;
+  }
+}
+
+/* Precog minimal indicator */
+.precog-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--geist-background);
+  border: 1px solid var(--geist-gray-200);
+  border-radius: var(--geist-radius);
+  box-shadow: var(--geist-shadow-md);
+  font-size: 12px;
+  color: var(--geist-gray-400);
+  z-index: 50;
+}
+
+.precog-indicator.active {
+  border-color: var(--geist-accent);
+}
+
+.precog-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--geist-gray-300);
+  transition: background 0.3s ease;
+}
+
+.precog-indicator.active .precog-indicator-dot {
+  background: var(--geist-accent);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Map container */
+.map-container {
+  width: 100%;
+  height: 500px;
+  border-radius: var(--geist-radius);
+  border: 1px solid var(--geist-gray-200);
+  overflow: hidden;
+}
+
+/* Loading state */
+.loading-vercel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--geist-gray-400);
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: var(--geist-gray-300);
+}
+
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin-bottom: 8px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  color: var(--geist-gray-400);
+  max-width: 400px;
+}
