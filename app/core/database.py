@@ -16,7 +16,14 @@ class Neo4jManager:
         self._driver = None
         self._uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         self._user = os.getenv("NEO4J_USER", "neo4j")
-        self._password = os.getenv("NEO4J_PASSWORD", "secret_password_123") 
+        self._password = os.getenv("NEO4J_PASSWORD")
+        if not self._password:
+             # Check if AUTH is set
+             auth = os.getenv("NEO4J_AUTH")
+             if auth and "/" in auth:
+                 _, self._password = auth.split("/", 1)
+             else:
+                 raise ValueError("NEO4J_PASSWORD environment variable is required") 
 
     async def connect(self):
         """Inicializa el driver asíncrono con Reintentos."""

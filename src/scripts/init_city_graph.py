@@ -12,7 +12,9 @@ import os
 # These are loaded from environment in a real app, but hardcoded here as per script provided
 URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 user = os.getenv("NEO4J_USER", "neo4j")
-password = os.getenv("NEO4J_PASSWORD", "secret_password_123")
+password = os.getenv("NEO4J_PASSWORD")
+if not password:
+    raise ValueError("NEO4J_PASSWORD environment variable is required")
 AUTH = (user, password)
 NUM_CITIZENS = 1000
 NUM_LOCATIONS = 50

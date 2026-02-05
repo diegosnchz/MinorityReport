@@ -101,7 +101,7 @@ services:
       - "7474:7474" # HTTP
       - "7687:7687" # Bolt
     environment:
-      NEO4J_AUTH: neo4j/secret_password
+      NEO4J_AUTH: neo4j/your_password
 ```
 
 ### 2. Estructura de Datos (Cypher Query Ejemplo)

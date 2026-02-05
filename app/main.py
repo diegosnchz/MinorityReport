@@ -16,6 +16,7 @@ from app.routers import (
 import numpy as np
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,7 +34,7 @@ app = FastAPI(title="Pre-Crime Department API", lifespan=lifespan)
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
