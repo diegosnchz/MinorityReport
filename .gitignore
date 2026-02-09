@@ -8,5 +8,12 @@ venv/
 .idea/
 .vscode/
 
+# Logs
+*.log
+api_logs.txt
+
+# Local overrides
+docker-compose.override.yml
+
 # Secrets
 app/static/config.js

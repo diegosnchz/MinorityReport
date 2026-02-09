@@ -29,7 +29,16 @@ class Neo4jClient:
 
         self.uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         user = os.getenv("NEO4J_USER", "neo4j")
-        password = os.getenv("NEO4J_PASSWORD", "secret_password_123")
+        password = os.getenv("NEO4J_PASSWORD")
+        if not password:
+            # Fallback for calc_engine legacy or raise error? 
+            # Per plan: raise error or rely on it being None and failing later.
+            # Plan said "Raise error if NEO4J_PASSWORD is missing"
+            if not os.getenv("NEO4J_AUTH"): # Check auth as well
+                 raise ValueError("NEO4J_PASSWORD environment variable is required")
+            else:
+                 # If AUTH is set, we might get password from there, handled below
+                 pass
         
         # Parse AUTH if provided in single var (docker-compose style)
         auth_env = os.getenv("NEO4J_AUTH")
