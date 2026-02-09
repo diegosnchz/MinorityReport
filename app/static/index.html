@@ -378,8 +378,8 @@
             });
 
         // Configure forces AFTER Graph is created (proper way to set d3 forces)
-        Graph.d3Force('link').distance(40);  // Shorter links for denser graph
-        Graph.d3Force('charge').strength(-80);  // Less repulsion for tighter clustering
+        Graph.d3Force('link').distance(100);  // Longer links for better separation
+        Graph.d3Force('charge').strength(-300);  // More repulsion to spread nodes
 
         async function fetchGraphData() {
             try {
