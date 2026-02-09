@@ -10,7 +10,7 @@ import os
 
 # --- CONFIGURACIÓN ---
 # These are loaded from environment in a real app, but hardcoded here as per script provided
-URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+URI = os.getenv("NEO4J_URI", "bolt://127.0.0.1:7687")
 user = os.getenv("NEO4J_USER", "neo4j")
 password = os.getenv("NEO4J_PASSWORD", "secret_password_123")
 AUTH = (user, password)

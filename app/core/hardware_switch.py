@@ -5,7 +5,8 @@ import logging
 logger = logging.getLogger("HardwareSwitch")
 
 # Chequear variable de entorno
-DEMO_MODE = os.getenv("DEMO_MODE", "False").lower() == "true"
+# Chequear variable de entorno (Force True for this branch)
+DEMO_MODE = True # os.getenv("DEMO_MODE", "False").lower() == "true"
 
 HAS_GPU = False
 cudf = None
