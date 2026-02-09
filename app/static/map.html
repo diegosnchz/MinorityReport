@@ -453,11 +453,11 @@
                     id: 'escape-routes-layer',
                     data: escapeRoutes,
                     pickable: true,
-                    getWidth: 2,  // Thin elegant lines
+                    getWidth: 12,  // Thick neon lines for visibility
                     getSourcePosition: d => d.source,
                     getTargetPosition: d => d.target,
-                    getSourceColor: [228, 228, 231, 180], // #e4e4e7 near white
-                    getTargetColor: [113, 113, 122, 180], // #71717a gray
+                    getSourceColor: [34, 211, 238, 255], // #22d3ee cyan
+                    getTargetColor: [34, 211, 238, 255], // #22d3ee cyan
                 })
             ];
 
